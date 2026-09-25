@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## [Ejercicio 3]
+
+- Se agregaron las interfaces IRepositorio, IRepositorioStock e
+  IRepositorioCotizacionDolar tomando como base las de la consigna.
+- Un repositorio por entidad con su CRUD, guardando en una base SQLite.
+- RepositorioBase con el CRUD genérico por ID para no repetir el SQL.
+- Stock se busca por libro y las cotizaciones por tipo y fecha.
+
 ## [Ejercicio 2]
 
 - Se crearon las entidades Libro, Genero, Editorial, Moneda, TipoCotizacion,
