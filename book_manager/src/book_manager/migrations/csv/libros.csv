@@ -1,0 +1,11 @@
+id,isbn,titulo,autor,editorial_id,genero_id
+1,978-950-07-0001-1,Rayuela,Julio Cortázar,2,1
+2,978-950-04-0002-2,Ficciones,Jorge Luis Borges,7,2
+3,978-950-49-0003-3,El túnel,Ernesto Sabato,1,1
+4,978-950-07-0004-4,Cien años de soledad,Gabriel García Márquez,2,1
+5,978-950-03-0005-5,Martín Fierro,José Hernández,8,4
+6,978-84-9838-006-6,El principito,Antoine de Saint-Exupéry,9,5
+7,978-84-450-0007-7,Fundación,Isaac Asimov,10,8
+8,978-987-629-008-8,Las venas abiertas de América Latina,Eduardo Galeano,5,3
+9,978-987-738-009-9,Estética de la fotografía,Francois Soulages,1,3
+10,978-84-339-0010-0,El camino del artista,Julia Cameron,3,3
