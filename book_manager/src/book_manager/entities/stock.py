@@ -3,10 +3,14 @@ from .validaciones import validar_tipo
 
 
 class Stock:
-    """Unidades disponibles de un libro. No tiene ID propio, se busca por libro."""
+    """Unidades disponibles de un libro.
+
+    No tiene ID propio, se identifica por el libro.
+    """
 
     def __init__(self, libro: Libro, cantidad: int = 0) -> None:
-        self.__libro = validar_tipo(libro, Libro, "El libro")
+        validar_tipo(libro, Libro, "El libro")
+        self.__libro = libro
         self.cantidad = cantidad
 
     @property
@@ -15,7 +19,7 @@ class Stock:
 
     @property
     def libro_id(self) -> int:
-        # Lo usa el repositorio de stock para buscar
+        """ID del libro, que es lo que usa el repositorio para buscar."""
         return self.__libro.id
 
     @property

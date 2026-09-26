@@ -1,19 +1,25 @@
 from datetime import date
 from decimal import Decimal
+from typing import Union
 
 from .tipo_cotizacion import TipoCotizacion
 from .validaciones import validar_importe, validar_tipo
 
 
 class CotizacionDolar:
-    """Valor de compra y venta del dólar (en pesos) para un tipo y una fecha.
+    """Valor de compra y venta del dólar (en pesos) para un tipo y fecha.
 
-    Tipo + fecha funcionan como clave del histórico, por eso no tienen setter.
+    Tipo + fecha funcionan como clave del histórico, por eso no tienen
+    setter.
     """
 
-    def __init__(self, tipo: TipoCotizacion, fecha: date, compra, venta) -> None:
-        self.__tipo = validar_tipo(tipo, TipoCotizacion, "El tipo de cotización")
-        self.__fecha = validar_tipo(fecha, date, "La fecha")
+    def __init__(self, tipo: TipoCotizacion, fecha: date,
+                 compra: Union[Decimal, int, float, str],
+                 venta: Union[Decimal, int, float, str]) -> None:
+        validar_tipo(tipo, TipoCotizacion, "El tipo de cotización")
+        validar_tipo(fecha, date, "La fecha")
+        self.__tipo = tipo
+        self.__fecha = fecha
         self.compra = compra
         self.venta = venta
 
@@ -23,7 +29,7 @@ class CotizacionDolar:
 
     @property
     def tipo_id(self) -> int:
-        # Lo usa el repositorio de cotizaciones para buscar
+        """ID del tipo, que es lo que usa el repositorio para buscar."""
         return self.__tipo.id
 
     @property
@@ -35,7 +41,7 @@ class CotizacionDolar:
         return self.__compra
 
     @compra.setter
-    def compra(self, valor) -> None:
+    def compra(self, valor: Union[Decimal, int, float, str]) -> None:
         importe = validar_importe(valor)
         if importe == 0:
             raise ValueError("La cotización de compra no puede ser 0.")
@@ -46,7 +52,7 @@ class CotizacionDolar:
         return self.__venta
 
     @venta.setter
-    def venta(self, valor) -> None:
+    def venta(self, valor: Union[Decimal, int, float, str]) -> None:
         importe = validar_importe(valor)
         if importe == 0:
             raise ValueError("La cotización de venta no puede ser 0.")

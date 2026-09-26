@@ -5,6 +5,7 @@ from .validaciones import validar_texto, validar_tipo
 
 
 class Libro(EntidadBase):
+    """Un título del catálogo de la librería."""
 
     def __init__(self, id: int, isbn: str, titulo: str, autor: str,
                  editorial: Editorial, genero: Genero) -> None:
@@ -21,7 +22,7 @@ class Libro(EntidadBase):
 
     @isbn.setter
     def isbn(self, valor: str) -> None:
-        # Lo guardamos como texto porque puede tener guiones o empezar con 0
+        """Se guarda como texto porque puede tener guiones o empezar con 0."""
         self.__isbn = validar_texto(valor, "El ISBN")
 
     @property
@@ -46,7 +47,8 @@ class Libro(EntidadBase):
 
     @editorial.setter
     def editorial(self, valor: Editorial) -> None:
-        self.__editorial = validar_tipo(valor, Editorial, "La editorial")
+        validar_tipo(valor, Editorial, "La editorial")
+        self.__editorial = valor
 
     @property
     def genero(self) -> Genero:
@@ -54,7 +56,8 @@ class Libro(EntidadBase):
 
     @genero.setter
     def genero(self, valor: Genero) -> None:
-        self.__genero = validar_tipo(valor, Genero, "El género")
+        validar_tipo(valor, Genero, "El género")
+        self.__genero = valor
 
     def __str__(self) -> str:
         return f"{self.titulo} - {self.autor} (ISBN {self.isbn})"

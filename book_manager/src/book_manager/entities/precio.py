@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Union
 
 from .entidad_base import EntidadBase
 from .libro import Libro
@@ -7,13 +8,19 @@ from .validaciones import validar_importe, validar_tipo
 
 
 class Precio(EntidadBase):
-    """Lo que sale un libro en una moneda determinada."""
+    """Lo que sale un libro en una moneda determinada.
 
-    def __init__(self, id: int, libro: Libro, moneda: Moneda, valor) -> None:
+    El libro y la moneda no se pueden cambiar: si cambia la moneda,
+    es otro precio.
+    """
+
+    def __init__(self, id: int, libro: Libro, moneda: Moneda,
+                 valor: Union[Decimal, int, float, str]) -> None:
         super().__init__(id)
-        # El libro y la moneda no se cambian: si cambia la moneda es otro precio
-        self.__libro = validar_tipo(libro, Libro, "El libro")
-        self.__moneda = validar_tipo(moneda, Moneda, "La moneda")
+        validar_tipo(libro, Libro, "El libro")
+        validar_tipo(moneda, Moneda, "La moneda")
+        self.__libro = libro
+        self.__moneda = moneda
         self.valor = valor
 
     @property
@@ -29,7 +36,7 @@ class Precio(EntidadBase):
         return self.__valor
 
     @valor.setter
-    def valor(self, nuevo_valor) -> None:
+    def valor(self, nuevo_valor: Union[Decimal, int, float, str]) -> None:
         self.__valor = validar_importe(nuevo_valor)
 
     def __str__(self) -> str:

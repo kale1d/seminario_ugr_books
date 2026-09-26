@@ -1,5 +1,20 @@
 # Registro de cambios
 
+## [Ejercicio 7]
+
+- main.py arma la base, los repositorios y los servicios y abre la consola.
+- Parámetro import_default_data para cargar o no los datos de los CSV.
+- La base se guarda en book_manager/datos (ignorada en git).
+
+## [Ejercicio 6]
+
+- Consola con un menú principal y un submenú por entidad para listar,
+  crear, modificar y eliminar.
+- Opciones extra para ingresar y retirar stock, ver el histórico del dólar
+  y cotizar un precio en pesos.
+- Si hay un error se muestra el mensaje y se vuelve al menú; con /cancelar
+  se puede salir de una carga a mitad de camino.
+
 ## [Ejercicio 5]
 
 - Archivos CSV en migrations/csv con los datos iniciales de las ocho

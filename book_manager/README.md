@@ -20,8 +20,13 @@ de cerca la cotización del dólar para mantener los valores actualizados.
 Desde el directorio `book_manager/`, con Python 3:
 
 ```bash
-python3 src/book_manager/main.py
+PYTHONPATH=src python3 -m book_manager.main
 ```
+
+La primera vez se crea la base en `datos/book_manager.sqlite3` y se cargan
+los datos de los CSV. Los cambios que se hagan quedan guardados para la
+próxima. Mientras se cargan datos se puede escribir `/cancelar` para volver
+al menú sin guardar.
 
 ## Organización
 

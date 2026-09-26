@@ -17,5 +17,5 @@ class Moneda(EntidadConNombre):
     def codigo(self, valor: str) -> None:
         codigo = validar_texto(valor, "El código").upper()
         if len(codigo) != 3 or not codigo.isalpha():
-            raise ValueError("El código de la moneda debe tener 3 letras (ej: ARS).")
+            raise ValueError("El código debe tener 3 letras (ej: ARS).")
         self.__codigo = codigo
