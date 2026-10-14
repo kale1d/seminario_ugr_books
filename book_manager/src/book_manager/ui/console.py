@@ -1,5 +1,6 @@
 """Interfaz de consola del gestor de libros."""
 
+import csv
 from datetime import date
 from typing import Callable, Dict, Optional, Tuple, Type, TypeVar
 
@@ -218,6 +219,8 @@ class Consola:
             "3": ("Modificar", self._modificar_precio),
             "4": ("Eliminar", lambda: self._eliminar(self._precios)),
             "5": ("Cotizar en pesos", self._cotizar_precio),
+            "6": ("Ver lista bimonetaria", self._ver_precios_bimonetaria),
+            "7": ("Exportar precios a CSV", self._exportar_precios_csv),
         })
 
     def _listar_precios(self) -> None:
@@ -241,11 +244,16 @@ class Consola:
         print("Se modificó correctamente.")
 
     def _cotizar_precio(self) -> None:
+        print("\nPrecios disponibles:")
+        self._listar_precios()
         precio = self._buscar(self._precios, "ID del precio: ")
+        print("\nTipos de cotización disponibles:")
+        for tipo_c in self._tipos_cotizacion.leer_todos():
+            print(f"  {tipo_c.id} | {tipo_c.nombre}")
         tipo = self._buscar(self._tipos_cotizacion,
                             "ID del tipo de cotización: ")
         fecha = self._pedir_fecha_opcional(
-            "Fecha (AAAA-MM-DD, vacío para hoy): "
+            "Fecha (AAAA-MM-DD, vacío para la última disponible): "
         )
         valor = self._precios.cotizar_en_pesos(precio.id, tipo.id, fecha)
         print(f"{precio.libro.titulo} sale ARS {valor:.2f} "
@@ -315,6 +323,7 @@ class Consola:
             "3": ("Modificar", self._modificar_cotizacion),
             "4": ("Eliminar", self._eliminar_cotizacion),
             "5": ("Ver histórico de un tipo", self._ver_historico),
+            "6": ("Obtener cotizaciones por API", self._obtener_cotizaciones_api),
         })
 
     def _listar_cotizaciones(self) -> None:
@@ -439,3 +448,39 @@ class Consola:
         entidad = self._buscar(servicio, "ID: ")
         servicio.eliminar(entidad.id)
         print("Se eliminó correctamente.")
+
+    def _ver_precios_bimonetaria(self) -> None:
+        print("\n--- LISTA BIMONETARIA ---")
+        tipo = self._buscar(self._tipos_cotizacion, "ID del tipo de cotización a usar (ej. Blue): ")
+        fecha = self._pedir_fecha_opcional("Fecha (AAAA-MM-DD, vacío para hoy): ")
+        
+        print("\nLibro | Precio Original | Precio en ARS")
+        print("-" * 50)
+        for precio in self._precios.leer_todos():
+            # Intentamos convertir el precio a pesos usando la lógica que ya tienes en el servicio
+            try:
+                valor_ars = self._precios.cotizar_en_pesos(precio.id, tipo.id, fecha)
+                print(f"{precio.libro.titulo} | {precio.moneda.codigo} {precio.valor} | ARS {valor_ars:.2f}")
+            except ValueError:
+                print(f"{precio.libro.titulo} | {precio.moneda.codigo} {precio.valor} | (No se pudo cotizar)")
+
+    def _exportar_precios_csv(self) -> None:
+        ruta_archivo = "precios_exportados.csv"
+        with open(ruta_archivo, mode='w', newline='', encoding='utf-8') as archivo_csv:
+            escritor = csv.writer(archivo_csv)
+            # Escribimos el encabezado
+            escritor.writerow(["ID Libro", "Titulo", "Moneda", "Valor"])
+            
+            # Escribimos los datos de cada precio
+            for precio in self._precios.leer_todos():
+                escritor.writerow([precio.libro.id, precio.libro.titulo, precio.moneda.codigo, precio.valor])
+                
+        print(f"Los precios se exportaron exitosamente al archivo: {ruta_archivo}")
+
+    def _obtener_cotizaciones_api(self) -> None:
+        print("Conectando con la API web para descargar cotizaciones...")
+        try:
+            self._cotizaciones.obtener_cotizaciones()
+            print("¡Cotizaciones descargadas y guardadas en la base de datos con éxito!")
+        except Exception as e:
+            print(f"Ocurrió un error al consultar la API: {e}")
