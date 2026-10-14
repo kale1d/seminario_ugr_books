@@ -1,12 +1,12 @@
 # Registro de cambios
 
-## [Ejercicio 7]
+## [Ejercicio 7] | día 07
 
 - main.py arma la base, los repositorios y los servicios y abre la consola.
 - Parámetro import_default_data para cargar o no los datos de los CSV.
 - La base se guarda en book_manager/datos (ignorada en git).
 
-## [Ejercicio 6]
+## [Ejercicio 6] | día 06
 
 - Consola con un menú principal y un submenú por entidad para listar,
   crear, modificar y eliminar.
@@ -15,7 +15,7 @@
 - Si hay un error se muestra el mensaje y se vuelve al menú; con /cancelar
   se puede salir de una carga a mitad de camino.
 
-## [Ejercicio 5]
+## [Ejercicio 5] | día 05
 
 - Archivos CSV en migrations/csv con los datos iniciales de las ocho
   entidades (al menos 10 registros cada una).
@@ -23,7 +23,7 @@
   servicios, en orden para respetar las relaciones.
 - Si un registro ya existe se saltea, así la carga se puede repetir.
 
-## [Ejercicio 4]
+## [Ejercicio 4] | día 04
 
 - Un servicio por entidad con la lógica de negocio, que usa los
   repositorios a través de sus interfaces.
@@ -33,7 +33,7 @@
 - Ingreso y retiro de unidades de stock sin permitir quedar en negativo.
 - Conversión de precios en USD a ARS con la última cotización vigente.
 
-## [Ejercicio 3]
+## [Ejercicio 3] | día 03
 
 - Se agregaron las interfaces IRepositorio, IRepositorioStock e
   IRepositorioCotizacionDolar tomando como base las de la consigna.
@@ -41,7 +41,7 @@
 - RepositorioBase con el CRUD genérico por ID para no repetir el SQL.
 - Stock se busca por libro y las cotizaciones por tipo y fecha.
 
-## [Ejercicio 2]
+## [Ejercicio 2] | día 02
 
 - Se crearon las entidades Libro, Genero, Editorial, Moneda, TipoCotizacion,
   Precio, Stock y CotizacionDolar, cada una en su archivo.
@@ -49,6 +49,6 @@
 - Clase base EntidadBase (ID) y EntidadConNombre para no repetir código.
 - Los importes se manejan con Decimal.
 
-## [Ejercicio 1]
+## [Ejercicio 1] | día 01
 
 - Estructura inicial del proyecto para Sprint_1.
