@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from contextlib import contextmanager
 
 Base = declarative_base()
 
@@ -13,3 +14,19 @@ class ConexionDB:
     def crear_tablas(self):
         """Crea las tablas en la base de datos si no existen."""
         Base.metadata.create_all(bind=self.engine)
+
+    @contextmanager
+    def obtener_sesion(self):
+        """
+        Context manager para manejar las transacciones a la base de datos.
+        Asegura que la sesión se cierre correctamente y maneja errores.
+        """
+        sesion = self.SessionLocal()
+        try:
+            yield sesion
+            sesion.commit()
+        except Exception as e:
+            sesion.rollback()
+            raise e
+        finally:
+            sesion.close()
