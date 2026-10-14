@@ -3,7 +3,7 @@ import os
 from sqlalchemy import text
 from ..database.connection import ConexionDB
 
-def migrar_datos(carpeta_csvs: str, carpeta_sqls: str):
+def migrar_datos(carpeta_csvs: str, carpeta_sqls: str, db: ConexionDB = None):
     """ Función encargada de la migración de datos de csv a sql.
     Se encarga de leer los archivos csv y crear los archivos sql
     para la inserción en la base de datos.
@@ -27,10 +27,10 @@ def migrar_datos(carpeta_csvs: str, carpeta_sqls: str):
         "cotizaciones_dolar.csv": "cotizaciones_dolar"
     }
 
-    # 3. Iniciamos la conexión a la base de datos
-    db = ConexionDB()
-    # Creamos las tablas por si no existen usando el método del Ejercicio 02
-    db.crear_tablas() 
+    # 3. Usamos la conexión recibida o creamos una nueva si no se pasó ninguna
+    if db is None:
+        db = ConexionDB()
+    db.crear_tablas()
     
     # 4. Usamos nuestro context manager del Ejercicio 03
     with db.obtener_sesion() as sesion:

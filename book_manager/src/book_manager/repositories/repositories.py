@@ -17,7 +17,7 @@ class RepositorioBase(Generic[T]):
     def crear(self, entidad: T) -> T:
         with self.db.obtener_sesion() as sesion:
             sesion.add(entidad)
-            sesion.commit()
+            sesion.flush()
             sesion.refresh(entidad)
             return entidad
 
@@ -31,9 +31,7 @@ class RepositorioBase(Generic[T]):
 
     def actualizar(self, entidad: T) -> T:
         with self.db.obtener_sesion() as sesion:
-            # merge une los datos nuevos con los existentes en la base de datos
             entidad_actualizada = sesion.merge(entidad)
-            sesion.commit()
             return entidad_actualizada
 
     def eliminar(self, id_entidad: int) -> bool:
@@ -41,7 +39,6 @@ class RepositorioBase(Generic[T]):
             entidad = sesion.query(self.modelo).filter(self.modelo.id == id_entidad).first()
             if entidad:
                 sesion.delete(entidad)
-                sesion.commit()
                 return True
             return False
 
@@ -84,7 +81,6 @@ class RepositorioStock(RepositorioBase[StockModel]):
             entidad = sesion.query(StockModel).filter(StockModel.libro_id == libro_id).first()
             if entidad:
                 sesion.delete(entidad)
-                sesion.commit()
                 return True
             return False
 
@@ -111,6 +107,5 @@ class RepositorioCotizacionDolar(RepositorioBase[CotizacionDolarModel]):
             ).first()
             if entidad:
                 sesion.delete(entidad)
-                sesion.commit()
                 return True
             return False

@@ -1,0 +1,13 @@
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('1', '1', '1', '28500');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('2', '2', '1', '24900');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('3', '3', '1', '19800');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('4', '4', '1', '32700');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('5', '5', '1', '15600');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('6', '6', '1', '18900');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('7', '7', '1', '27400');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('8', '8', '1', '29900');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('9', '9', '1', '23500');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('10', '10', '1', '35200');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('13', '6', '2', '14.99');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('14', '7', '2', '19.50');
+INSERT INTO precios (id, libro_id, moneda_id, valor) VALUES ('15', '10', '2', '24.90');

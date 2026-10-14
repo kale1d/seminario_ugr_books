@@ -40,8 +40,8 @@ class LibroModel(Base):
     genero_id = Column(Integer, ForeignKey("generos.id"))
 
     # Relaciones para acceder a los objetos fácilmente en Python
-    editorial = relationship("EditorialModel")
-    genero = relationship("GeneroModel")
+    editorial = relationship("EditorialModel", lazy="joined")
+    genero = relationship("GeneroModel", lazy="joined")
 
 class PrecioModel(Base):
     __tablename__ = "precios"
@@ -52,8 +52,8 @@ class PrecioModel(Base):
     libro_id = Column(Integer, ForeignKey("libros.id"))
     moneda_id = Column(Integer, ForeignKey("monedas.id"))
     
-    libro = relationship("LibroModel")
-    moneda = relationship("MonedaModel")
+    libro = relationship("LibroModel", lazy="joined")
+    moneda = relationship("MonedaModel", lazy="joined")
 
 class StockModel(Base):
     __tablename__ = "stock"
@@ -61,7 +61,7 @@ class StockModel(Base):
     libro_id = Column(Integer, ForeignKey("libros.id"), primary_key=True)
     cantidad = Column(Integer, nullable=False, default=0)
     
-    libro = relationship("LibroModel")
+    libro = relationship("LibroModel", lazy="joined")
 
 class CotizacionDolarModel(Base):
     __tablename__ = "cotizaciones_dolar"
@@ -71,4 +71,4 @@ class CotizacionDolarModel(Base):
     compra = Column(Numeric(10, 2), nullable=False)
     venta = Column(Numeric(10, 2), nullable=False)
     
-    tipo = relationship("TipoCotizacionModel")
+    tipo = relationship("TipoCotizacionModel", lazy="joined")
