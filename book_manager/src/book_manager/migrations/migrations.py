@@ -55,14 +55,17 @@ def migrar_datos(carpeta_csvs: str, carpeta_sqls: str, db: ConexionDB = None):
                     # Obtenemos los valores. Escapamos las comillas simples para SQL
                     valores = ", ".join(f"'{str(v).replace('\'', '\'\'')}'" for v in fila.values())
                     
-                    # 5. Armamos la sentencia SQL
-                    sql_insert = f"INSERT INTO {tabla} ({columnas}) VALUES ({valores});\n"
-                    
+                    # 5. Armamos la sentencia SQL (ON CONFLICT DO NOTHING evita errores
+                    #    si los datos ya existen en la base de datos)
+                    sql_insert = (
+                        f"INSERT INTO {tabla} ({columnas}) VALUES ({valores}) "
+                        f"ON CONFLICT DO NOTHING;\n"
+                    )
+
                     # 6. Escribimos la sentencia en el archivo .sql
                     f_sql.write(sql_insert)
-                    
+
                     # 7. Ejecutamos la sentencia en la base de datos
-                    # Usamos text() de SQLAlchemy para ejecutar SQL puro
                     sesion.execute(text(sql_insert))
                     
         # Al salir del bloque 'with', el context manager hace el commit automáticamente

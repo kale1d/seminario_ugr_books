@@ -1,5 +1,26 @@
 # Book Manager
 
+## Sprint 2
+
+### Objetivo
+
+Aplicar la persistencia de datos en una base de datos relacional utilizando el ORM SQLAlchemy, consolidar la normalización de datos, y conectar el sistema a APIs externas de forma segura.
+
+### Contexto
+
+El sistema evoluciona para dejar atrás los archivos de texto simples y migrar toda su información a tablas relacionales robustas. Además, la aplicación ahora realiza consultas en tiempo real a la API de DolarAPI para mantener las cotizaciones sincronizadas, y permite exportar listados bimonetarios, gestionando parámetros confidenciales de forma segura mediante un archivo de entorno (`.env`).
+
+## Ejecución
+
+Desde el directorio `book_manager/`, asegúrate de tener el archivo `.env` configurado en la raíz, instala las dependencias y ejecuta el programa con Python 3:
+
+```bash
+# Instalar dependencias
+pip install sqlalchemy
+
+# Ejecutar el programa (en Windows usa 'py' si 'python3' no funciona)
+PYTHONPATH=src python3 -m book_manager.main
+
 ## Sprint 1
 
 ### Objetivo
@@ -40,18 +61,27 @@ al menú sin guardar.
 
 ## Base de datos
 
-Los datos se guardan en SQLite, que ya viene con Python. Por defecto el
-archivo se crea en `datos/book_manager.sqlite3`. Ejemplo de uso (con
-`PYTHONPATH=src` desde `book_manager/`):
+Los datos se gestionan mediante el ORM SQLAlchemy, apuntando a una base de datos relacional PostgreSQL alojada en Supabase. Se requiere la instalación del driver `psycopg2-binary` para establecer la comunicación. El sistema utiliza un *context manager* para manejar transacciones (commit, rollback y cierre automático de sesiones).
+
+Para el correcto funcionamiento, el archivo `.env` en la raíz del proyecto debe contener:
+- `API_URL`: Ruta a la API de cotizaciones.
+- `DATABASE_URL`: Cadena de conexión a Supabase con el formato `postgresql+psycopg2://...`
+
+Ejemplo de uso interno de la base de datos:
 
 ```python
-from book_manager.entities import Genero
-from book_manager.repositories import BaseDeDatos, RepositorioGenero
+from book_manager.database.connection import ConexionDB
+from book_manager.models.models import GeneroModel
+from book_manager.repositories.repositories import RepositorioGenero
 
-with BaseDeDatos() as base:
-    generos = RepositorioGenero(base)
-    generos.crear(Genero(1, "Novela"))
-    print(generos.leer_todos())
+# 1. Iniciar la conexión a Supabase
+db = ConexionDB()
+db.crear_tablas()
+
+# 2. Instanciar el repositorio específico y realizar operaciones
+repo_generos = RepositorioGenero(db)
+nuevo_genero = GeneroModel(nombre="Fantasía Épica")
+repo_generos.crear(nuevo_genero)
 ```
 
 Algunas cosas a tener en cuenta:

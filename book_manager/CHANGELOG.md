@@ -1,5 +1,44 @@
 # Registro de cambios
 
+## [Sprint 2 - Fixes]
+## [Sprint 2 - Fixes]
+- Integración definitiva con Supabase (PostgreSQL) como base de datos en la nube.
+- Instalación de `psycopg2-binary` y adaptación dinámica de la cadena de conexión en `ConexionDB` para reemplazar prefijos `postgres://` a `postgresql+psycopg2://`.
+- Corrección de lazy loading (`lazy="joined"`) en los modelos para evitar errores de sesión desconectada (`DetachedInstanceError`).
+- Eliminación de commits duplicados en repositorios usando `flush()`.
+
+## [Ejercicio 08]
+- Agregadas opciones en el menú interactivo para obtener cotizaciones por API, listar precios bimonetarios y exportar datos a CSV.
+
+## [Ejercicio 07]
+- Integración con la API web del dólar mediante la librería `urllib`.
+- Configuración de variables de entorno mediante un archivo `.env` para proteger la URL de la API.
+
+## [Ejercicio 06]
+- Refactorización completa de la capa de repositorios para utilizar SQLAlchemy.
+- Implementación de un `RepositorioBase` genérico con operaciones CRUD y repositorios específicos por entidad.
+
+## [Ejercicio 05]
+- Creación de script de migración para leer datos estructurados de archivos CSV.
+- Generación automática de sentencias SQL `INSERT INTO` y ejecución en la base de datos a través de SQLAlchemy.
+
+## [Ejercicio 04]
+- Creación de modelos de base de datos (`declarative_base`) definiendo tablas, columnas y tipos de datos.
+- Configuración de relaciones entre tablas usando claves foráneas (`ForeignKey` y `relationship`).
+
+## [Ejercicio 03]
+- Implementación de un context manager (`@contextmanager`) para encapsular las operaciones de base de datos con `commit`, `rollback` y `close`.
+
+## [Ejercicio 02]
+- Configuración inicial del motor de base de datos creando la clase `ConexionDB` con SQLAlchemy.
+
+## [Ejercicio 01]
+- Inicialización de la rama `Sprint_2` y reestructuración del entorno de trabajo.
+
+---
+
+# Registro de cambios Sprint 1
+
 ## [Ejercicio 7] | día 07
 
 - main.py arma la base, los repositorios y los servicios y abre la consola.
