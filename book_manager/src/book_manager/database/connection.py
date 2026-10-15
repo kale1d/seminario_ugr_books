@@ -18,14 +18,20 @@ class ConexionDB:
         if not db_url:
             raise ValueError("No se encontró DATABASE_URL en el archivo .env")
             
-        # Forzamos a SQLAlchemy a usar el driver psycopg2 que ya instalamos
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
         elif db_url.startswith("postgresql://"):
             db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
             
         self.engine = create_engine(db_url, echo=False)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        
+        # AGREGADO: expire_on_commit=False evita el DetachedInstanceError
+        self.SessionLocal = sessionmaker(
+            autocommit=False, 
+            autoflush=False, 
+            bind=self.engine,
+            expire_on_commit=False 
+        )
 
     def crear_tablas(self):
         """Crea las tablas en la base de datos si no existen."""
