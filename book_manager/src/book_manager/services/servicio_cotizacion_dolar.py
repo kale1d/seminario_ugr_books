@@ -17,14 +17,12 @@ class ServicioCotizacionDolar(ServicioBase):
         Devuelve la cotización de una fecha específica, o la más reciente si no se indica fecha.
         """
         if fecha:
-            # Si hay fecha, buscamos la de ese día exacto
-            return self.repositorio.leer_por_tipo_y_fecha(tipo_id, fecha)
+            # Usamos _repositorio (con guion bajo) heredado de ServicioBase
+            return self._repositorio.leer_por_tipo_y_fecha(tipo_id, fecha)
         else:
-            # Si no hay fecha, traemos el histórico, lo ordenamos y devolvemos la más nueva
-            historico = self.repositorio.leer_historico_por_tipo(tipo_id)
+            historico = self._repositorio.leer_historico_por_tipo(tipo_id)
             if not historico:
                 return None
-            # Ordenamos por fecha descendente (reverse=True)
             historico_ordenado = sorted(historico, key=lambda c: c.fecha, reverse=True)
             return historico_ordenado[0]
 
@@ -55,10 +53,10 @@ class ServicioCotizacionDolar(ServicioBase):
             if tipo_bd and compra and venta:
                 nueva_cotizacion = CotizacionDolar(tipo_bd, fecha_hoy, compra, venta)
                 
-                existente = self.repositorio.leer_por_tipo_y_fecha(tipo_bd.id, fecha_hoy)
+                existente = self._repositorio.leer_por_tipo_y_fecha(tipo_bd.id, fecha_hoy)
                 if existente:
                     existente.compra = compra
                     existente.venta = venta
-                    self.repositorio.actualizar(existente)
+                    self._repositorio.actualizar(existente)
                 else:
-                    self.repositorio.crear(nueva_cotizacion)
+                    self._repositorio.crear(nueva_cotizacion)
