@@ -4,11 +4,11 @@
 
 ### Objetivo
 
-Corregir las observaciones de la entrega del Sprint 2 y continuar con la evolución del sistema en las siguientes consignas del Sprint 3.
+Obtener datos de la web para comparar los precios de nuestro catálogo con los de la competencia (Cúspide) y competir de forma más informada.
 
 ### Contexto
 
-El Sprint 3 parte de la rama `Sprint_2`. El Día 1 se dedica a las correcciones del Sprint 2: relaciones bidireccionales en los modelos, repositorios que respetan la interfaz `IRepositorio`, firma original de `main`, un servicio de cotizaciones más robusto y una lista bimonetaria que permite elegir la moneda. El detalle está en el `CHANGELOG.md`.
+En el Sprint 1 el sistema persistía en archivos y en el Sprint 2 pasó a una base relacional (Supabase) con SQLAlchemy. En este Sprint 3 se agrega: la carga de datos desde archivos SQL, un scraper con Scrapy que busca solo los libros del catálogo, la comparación de precios con alertas en CSV, un reporte en Excel, la auditoría de todas las operaciones y nuevas opciones de menú.
 
 ## Sprint 2
 

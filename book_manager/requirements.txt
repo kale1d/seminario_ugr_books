@@ -1,1 +1,4 @@
 # Sin dependencias externas por el momento.
+scrapy
+pandas
+openpyxl

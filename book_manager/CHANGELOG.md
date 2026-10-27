@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## [Ejercicio 01]
+- Creación de la rama `Sprint_3` a partir de `Sprint_2`.
+- Nuevas carpetas `scraper/` (con `spiders/`) y `reportes/` en la estructura del proyecto.
+- `requirements.txt` suma `scrapy`, `pandas` y `openpyxl`.
+- `.gitignore` excluye el contenido generado en `reportes/`.
+- README actualizado con el objetivo y el contexto del Sprint 3.
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+
 ## [Día 1 - Correcciones del Sprint 2]
 - Modelos: las relaciones de `LibroModel`, `PrecioModel`, `StockModel` y `CotizacionDolarModel` ahora son bidireccionales con `back_populates`, y se agregaron las relaciones inversas en `GeneroModel`, `EditorialModel`, `MonedaModel`, `TipoCotizacionModel` y `LibroModel`.
 - Repositorios: `RepositorioBase` hereda de `IRepositorio`; `RepositorioStock` y `RepositorioCotizacionDolar` implementan además sus interfaces específicas.
