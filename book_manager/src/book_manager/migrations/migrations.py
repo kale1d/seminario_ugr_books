@@ -1,9 +1,26 @@
-"""Migración de los datos de los CSV a la base de datos."""
+"""Migración de datos: de archivos CSV a archivos SQL y de ahí a la base."""
 
 import csv
 import os
+
 from sqlalchemy import text
+
 from ..database.connection import ConexionDB
+
+# Archivo CSV de origen -> tabla destino. El orden importa: cada tabla se
+# carga después de las que referencia por clave foránea (por ejemplo,
+# los libros después de géneros y editoriales).
+ARCHIVOS_TABLAS = {
+    "generos.csv": "generos",
+    "editoriales.csv": "editoriales",
+    "tipos_cotizacion.csv": "tipos_cotizacion",
+    "monedas.csv": "monedas",
+    "libros.csv": "libros",
+    "precios.csv": "precios",
+    "stock.csv": "stock",
+    "cotizaciones_dolar.csv": "cotizaciones_dolar",
+}
+
 
 def _literal_sql(valor: str) -> str:
     """Devuelve el valor como texto SQL entre comillas simples, duplicando
@@ -12,70 +29,80 @@ def _literal_sql(valor: str) -> str:
     return "'" + str(valor).replace("'", comilla_doble) + "'"
 
 
-def migrar_datos(carpeta_csvs: str, carpeta_sqls: str, db: ConexionDB = None):
-    """ Función encargada de la migración de datos de csv a sql.
-    Se encarga de leer los archivos csv y crear los archivos sql
-    para la inserción en la base de datos.
+def generar_sqls(carpeta_csvs: str, carpeta_sqls: str) -> None:
+    """Genera un archivo .sql por tabla a partir de los CSV.
+
+    Cada fila del CSV se convierte en una sentencia INSERT escrita en su
+    propia línea.
 
     Args:
-        carpeta_csvs (str): Carpeta donde se encuentran los archivos csv de origen.
-        carpeta_sqls (str): Carpeta donde se deben guardar los archivos sql generados.
+        carpeta_csvs (str): Carpeta donde están los archivos CSV.
+        carpeta_sqls (str): Carpeta donde se guardan los .sql generados.
     """
-    # 1. Nos aseguramos de que la carpeta para guardar los SQL exista
     os.makedirs(carpeta_sqls, exist_ok=True)
-    
-    # 2. Relacionamos el nombre de cada archivo CSV con el nombre de su tabla
-    archivos_tablas = {
-        "generos.csv": "generos",
-        "editoriales.csv": "editoriales",
-        "tipos_cotizacion.csv": "tipos_cotizacion",
-        "monedas.csv": "monedas",
-        "libros.csv": "libros",
-        "precios.csv": "precios",
-        "stock.csv": "stock",
-        "cotizaciones_dolar.csv": "cotizaciones_dolar"
-    }
 
-    # 3. Usamos la conexión recibida o creamos una nueva si no se pasó ninguna
+    for archivo_csv, tabla in ARCHIVOS_TABLAS.items():
+        ruta_csv = os.path.join(carpeta_csvs, archivo_csv)
+        ruta_sql = os.path.join(carpeta_sqls, f"{tabla}.sql")
+
+        if not os.path.exists(ruta_csv):
+            print(f"No se encontró el archivo {archivo_csv}, saltando...")
+            continue
+
+        with open(ruta_csv, mode="r", encoding="utf-8") as f_csv, \
+                open(ruta_sql, mode="w", encoding="utf-8") as f_sql:
+            for fila in csv.DictReader(f_csv):
+                columnas = ", ".join(fila.keys())
+                valores = ", ".join(_literal_sql(v) for v in fila.values())
+                # ON CONFLICT DO NOTHING permite volver a cargar el archivo
+                # sin errores si los datos ya existen.
+                f_sql.write(
+                    f"INSERT INTO {tabla} ({columnas}) VALUES ({valores}) "
+                    f"ON CONFLICT DO NOTHING;\n"
+                )
+
+
+def cargar_datos_desde_sql(carpeta_sqls: str, db: ConexionDB) -> None:
+    """Ejecuta en la base de datos las sentencias de los archivos .sql.
+
+    Los archivos se cargan en el orden de ARCHIVOS_TABLAS, todos dentro de
+    una misma transacción: si alguna sentencia falla, no se guarda nada.
+
+    Args:
+        carpeta_sqls (str): Carpeta donde están los archivos .sql.
+        db (ConexionDB): Conexión a la base de datos.
+    """
+    db.crear_tablas()
+
+    with db.obtener_sesion() as sesion:
+        for tabla in ARCHIVOS_TABLAS.values():
+            ruta_sql = os.path.join(carpeta_sqls, f"{tabla}.sql")
+
+            if not os.path.exists(ruta_sql):
+                print(f"No se encontró {tabla}.sql, saltando...")
+                continue
+
+            with open(ruta_sql, mode="r", encoding="utf-8") as f_sql:
+                for linea in f_sql:
+                    sentencia = linea.strip()
+                    if sentencia:
+                        sesion.execute(text(sentencia))
+
+
+def migrar_datos(carpeta_csvs: str, carpeta_sqls: str,
+                 db: ConexionDB = None) -> None:
+    """Migra los datos de los CSV a la base de datos.
+
+    Genera los archivos .sql a partir de los CSV y luego los carga.
+
+    Args:
+        carpeta_csvs (str): Carpeta donde están los archivos CSV de origen.
+        carpeta_sqls (str): Carpeta donde se guardan los .sql generados.
+        db (ConexionDB): Conexión a usar; si no se pasa, se crea una.
+    """
     if db is None:
         db = ConexionDB()
-    db.crear_tablas()
-    
-    # 4. Usamos nuestro context manager del Ejercicio 03
-    with db.obtener_sesion() as sesion:
-        for archivo_csv, tabla in archivos_tablas.items():
-            ruta_csv = os.path.join(carpeta_csvs, archivo_csv)
-            ruta_sql = os.path.join(carpeta_sqls, f"{tabla}.sql")
-            
-            # Si el archivo CSV no existe, saltamos al siguiente
-            if not os.path.exists(ruta_csv):
-                print(f"No se encontró el archivo {archivo_csv}, saltando...")
-                continue
-                
-            # Abrimos el CSV para leer y el SQL para escribir
-            with open(ruta_csv, mode='r', encoding='utf-8') as f_csv, \
-                 open(ruta_sql, mode='w', encoding='utf-8') as f_sql:
-                
-                # DictReader lee la primera fila como el nombre de las columnas
-                lector = csv.DictReader(f_csv)
-                for fila in lector:
-                    # Obtenemos los nombres de las columnas
-                    columnas = ", ".join(fila.keys())
-                    # Obtenemos los valores. Escapamos las comillas simples para SQL
-                    valores = ", ".join(_literal_sql(v) for v in fila.values())
-                    
-                    # 5. Armamos la sentencia SQL (ON CONFLICT DO NOTHING evita errores
-                    #    si los datos ya existen en la base de datos)
-                    sql_insert = (
-                        f"INSERT INTO {tabla} ({columnas}) VALUES ({valores}) "
-                        f"ON CONFLICT DO NOTHING;\n"
-                    )
 
-                    # 6. Escribimos la sentencia en el archivo .sql
-                    f_sql.write(sql_insert)
-
-                    # 7. Ejecutamos la sentencia en la base de datos
-                    sesion.execute(text(sql_insert))
-                    
-        # Al salir del bloque 'with', el context manager hace el commit automáticamente
-        print("Migración a SQL completada con éxito.")
+    generar_sqls(carpeta_csvs, carpeta_sqls)
+    cargar_datos_desde_sql(carpeta_sqls, db)
+    print("Migración a SQL completada con éxito.")

@@ -7,6 +7,13 @@
 - `.gitignore` excluye el contenido generado en `reportes/`.
 - README actualizado con el objetivo y el contexto del Sprint 3.
 
+## [Ejercicio 02]
+- Nueva función `cargar_datos_desde_sql` en `migrations.py`: ejecuta los archivos `.sql` en el orden de las tablas y dentro de una única transacción.
+- Nueva función `generar_sqls`: genera los `.sql` a partir de los CSV.
+- `migrar_datos` ahora coordina `generar_sqls` y `cargar_datos_desde_sql`.
+
+
+
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 
