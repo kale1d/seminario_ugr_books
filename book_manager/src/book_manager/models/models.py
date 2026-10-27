@@ -1,71 +1,137 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey
+"""Modelos SQLAlchemy: tablas de la base de datos y sus relaciones.
+
+Cada modelo representa una tabla. Las relaciones se declaran en ambos
+sentidos con ``back_populates`` (por ejemplo, un libro conoce a su
+editorial y una editorial conoce a sus libros).
+"""
+
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
-# Importamos la Base que creaste en el Ejercicio 02
+
 from ..database.connection import Base
 
-# --- Entidades Básicas ---
+# --- Entidades básicas ---
+
 
 class GeneroModel(Base):
+    """Tabla de géneros literarios."""
+
     __tablename__ = "generos"
+
     id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
+
+    # passive_deletes="all": el ORM no toca los hijos al borrar el padre,
+    # así la base rechaza el borrado de un registro que está en uso.
+    libros = relationship("LibroModel", back_populates="genero",
+                          passive_deletes="all")
+
 
 class EditorialModel(Base):
+    """Tabla de editoriales."""
+
     __tablename__ = "editoriales"
+
     id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
 
+    libros = relationship("LibroModel", back_populates="editorial",
+                          passive_deletes="all")
+
+
 class MonedaModel(Base):
+    """Tabla de monedas (el código es único, por ejemplo ARS o USD)."""
+
     __tablename__ = "monedas"
+
     id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
     codigo = Column(String, nullable=False, unique=True)
 
+    precios = relationship("PrecioModel", back_populates="moneda",
+                           passive_deletes="all")
+
+
 class TipoCotizacionModel(Base):
+    """Tabla de tipos de cotización del dólar (oficial, blue, etc.)."""
+
     __tablename__ = "tipos_cotizacion"
+
     id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
 
-# --- Entidades con Relaciones ---
-# --- Entidades con Relaciones ---
+    cotizaciones = relationship("CotizacionDolarModel",
+                                back_populates="tipo",
+                                passive_deletes="all")
+
+
+# --- Entidades con relaciones ---
+
 
 class LibroModel(Base):
+    """Tabla de libros, con su editorial y su género."""
+
     __tablename__ = "libros"
+
     id = Column(Integer, primary_key=True)
     isbn = Column(String, nullable=False, unique=True)
     titulo = Column(String, nullable=False)
     autor = Column(String, nullable=False)
-    
+
     editorial_id = Column(Integer, ForeignKey("editoriales.id"))
     genero_id = Column(Integer, ForeignKey("generos.id"))
 
-    # Agregamos lazy="joined" a todas las relaciones
-    editorial = relationship("EditorialModel", lazy="joined")
-    genero = relationship("GeneroModel", lazy="joined")
+    # lazy="joined" trae la relación en la misma consulta y evita errores
+    # al usar el modelo después de cerrar la sesión.
+    editorial = relationship("EditorialModel", back_populates="libros",
+                             lazy="joined")
+    genero = relationship("GeneroModel", back_populates="libros",
+                          lazy="joined")
+    precios = relationship("PrecioModel", back_populates="libro",
+                           passive_deletes="all")
+    stock = relationship("StockModel", back_populates="libro",
+                         uselist=False, passive_deletes="all")
+
 
 class PrecioModel(Base):
+    """Tabla de precios: valor de un libro en una moneda."""
+
     __tablename__ = "precios"
+
     id = Column(Integer, primary_key=True)
-    valor = Column(Numeric(10, 2), nullable=False) 
-    
+    valor = Column(Numeric(10, 2), nullable=False)
+
     libro_id = Column(Integer, ForeignKey("libros.id"))
     moneda_id = Column(Integer, ForeignKey("monedas.id"))
-    
-    libro = relationship("LibroModel", lazy="joined")
-    moneda = relationship("MonedaModel", lazy="joined")
+
+    libro = relationship("LibroModel", back_populates="precios",
+                         lazy="joined")
+    moneda = relationship("MonedaModel", back_populates="precios",
+                          lazy="joined")
+
 
 class StockModel(Base):
+    """Tabla de stock: unidades disponibles de cada libro."""
+
     __tablename__ = "stock"
+
     libro_id = Column(Integer, ForeignKey("libros.id"), primary_key=True)
     cantidad = Column(Integer, nullable=False, default=0)
-    
-    libro = relationship("LibroModel", lazy="joined")
+
+    libro = relationship("LibroModel", back_populates="stock",
+                         lazy="joined")
+
 
 class CotizacionDolarModel(Base):
+    """Tabla del histórico de cotizaciones (clave: tipo + fecha)."""
+
     __tablename__ = "cotizaciones_dolar"
-    tipo_id = Column(Integer, ForeignKey("tipos_cotizacion.id"), primary_key=True)
+
+    tipo_id = Column(Integer, ForeignKey("tipos_cotizacion.id"),
+                     primary_key=True)
     fecha = Column(Date, primary_key=True)
     compra = Column(Numeric(10, 2), nullable=False)
     venta = Column(Numeric(10, 2), nullable=False)
-    
-    tipo = relationship("TipoCotizacionModel", lazy="joined")
+
+    tipo = relationship("TipoCotizacionModel",
+                        back_populates="cotizaciones", lazy="joined")

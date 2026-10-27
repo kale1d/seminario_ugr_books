@@ -1,6 +1,20 @@
 # Registro de cambios
 
-## [Sprint 2 - Fixes]
+## [Día 1 - Correcciones del Sprint 2]
+- Modelos: las relaciones de `LibroModel`, `PrecioModel`, `StockModel` y `CotizacionDolarModel` ahora son bidireccionales con `back_populates`, y se agregaron las relaciones inversas en `GeneroModel`, `EditorialModel`, `MonedaModel`, `TipoCotizacionModel` y `LibroModel`.
+- Repositorios: `RepositorioBase` hereda de `IRepositorio`; `RepositorioStock` y `RepositorioCotizacionDolar` implementan además sus interfaces específicas.
+- Repositorios: `actualizar` verifica que el registro exista antes de hacer `merge` y lanza `ValueError` si no existe.
+- Repositorios: lecturas por clave con `Session.get` y histórico de cotizaciones ordenado por fecha.
+- `main`: se restituye la firma pedida `main(import_default_data: bool = True)`.
+- Servicio de cotizaciones: la URL se toma solo de `API_URL` (sin URL de respaldo) y se valida que esté definida.
+- Servicio de cotizaciones: la consulta a la API tiene `timeout` y manejo de errores de red y de formato (`ValueError` con mensaje claro).
+- Servicio de cotizaciones: la fecha se toma de `fechaActualizacion` de la API (hoy solo si no viene informada).
+- Servicio de cotizaciones: las casas que no tienen tipo cargado ya no se descartan; se da de alta el tipo y se guarda la cotización. Se mapean `bolsa` a MEP y `contadoconliqui` a CCL.
+- Servicio de cotizaciones: se recuperan `crear`, `actualizar`, `eliminar`, `leer_por_tipo_y_fecha` y `leer_historico_por_tipo`, que usa la consola.
+- Consola: la lista bimonetaria pide también la moneda a mostrar, además del tipo de cotización y la fecha.
+- Migraciones: el armado de las sentencias SQL deja de usar una f-string con barras invertidas (solo válida desde Python 3.12).
+- Estilo: imports ordenados al inicio de los módulos (sin comentarios intercalados ni imports sin usar) y docstrings en módulos, clases y métodos.
+
 ## [Sprint 2 - Fixes]
 - Integración definitiva con Supabase (PostgreSQL) como base de datos en la nube.
 - Instalación de `psycopg2-binary` y adaptación dinámica de la cadena de conexión en `ConexionDB` para reemplazar prefijos `postgres://` a `postgresql+psycopg2://`.

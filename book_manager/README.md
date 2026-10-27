@@ -1,5 +1,15 @@
 # Book Manager
 
+## Sprint 3
+
+### Objetivo
+
+Corregir las observaciones de la entrega del Sprint 2 y continuar con la evolución del sistema en las siguientes consignas del Sprint 3.
+
+### Contexto
+
+El Sprint 3 parte de la rama `Sprint_2`. El Día 1 se dedica a las correcciones del Sprint 2: relaciones bidireccionales en los modelos, repositorios que respetan la interfaz `IRepositorio`, firma original de `main`, un servicio de cotizaciones más robusto y una lista bimonetaria que permite elegir la moneda. El detalle está en el `CHANGELOG.md`.
+
 ## Sprint 2
 
 ### Objetivo
@@ -20,6 +30,7 @@ pip install sqlalchemy
 
 # Ejecutar el programa (en Windows usa 'py' si 'python3' no funciona)
 PYTHONPATH=src python3 -m book_manager.main
+```
 
 ## Sprint 1
 

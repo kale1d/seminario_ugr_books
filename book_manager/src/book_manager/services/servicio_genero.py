@@ -1,3 +1,5 @@
+"""Servicio de géneros."""
+
 from ..entities.genero import Genero
 from .servicio_base import ServicioBase
 

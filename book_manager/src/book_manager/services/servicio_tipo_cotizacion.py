@@ -1,3 +1,5 @@
+"""Servicio de tipos de cotización."""
+
 from ..entities.tipo_cotizacion import TipoCotizacion
 from .servicio_base import ServicioBase
 

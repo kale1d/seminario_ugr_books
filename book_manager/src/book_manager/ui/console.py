@@ -45,6 +45,7 @@ class Consola:
                  libros: ServicioLibro, precios: ServicioPrecio,
                  stock: ServicioStock,
                  cotizaciones: ServicioCotizacionDolar) -> None:
+        """Guarda los servicios que usan los menús."""
         self._generos = generos
         self._editoriales = editoriales
         self._monedas = monedas
@@ -100,12 +101,15 @@ class Consola:
     # ---------- Géneros, editoriales y tipos de cotización ----------
 
     def _menu_generos(self) -> None:
+        """Menú de géneros."""
         self._menu_con_nombre("GÉNEROS", self._generos, Genero)
 
     def _menu_editoriales(self) -> None:
+        """Menú de editoriales."""
         self._menu_con_nombre("EDITORIALES", self._editoriales, Editorial)
 
     def _menu_tipos_cotizacion(self) -> None:
+        """Menú de tipos de cotización."""
         self._menu_con_nombre("TIPOS DE COTIZACIÓN", self._tipos_cotizacion,
                               TipoCotizacion)
 
@@ -113,15 +117,18 @@ class Consola:
                          clase: Type[EntidadConNombre]) -> None:
         """Menú compartido por las entidades que solo tienen ID y nombre."""
         def listar() -> None:
+            """Muestra todos los registros."""
             for entidad in servicio.leer_todos():
                 print(f"{entidad.id} | {entidad.nombre}")
 
         def crear() -> None:
+            """Pide el nombre y crea el registro."""
             id = self._pedir_id_nuevo(servicio)
             servicio.crear(clase(id, self._pedir_texto("Nombre: ")))
             print("Se creó correctamente.")
 
         def modificar() -> None:
+            """Pide el nombre nuevo y modifica el registro."""
             entidad = self._buscar(servicio, "ID: ")
             entidad.nombre = self._pedir_texto(
                 f"Nombre [{entidad.nombre}]: ", entidad.nombre
@@ -139,6 +146,7 @@ class Consola:
     # ---------- Monedas ----------
 
     def _menu_monedas(self) -> None:
+        """Menú de monedas."""
         self._menu("MONEDAS", {
             "1": ("Listar", self._listar_monedas),
             "2": ("Crear", self._crear_moneda),
@@ -147,10 +155,12 @@ class Consola:
         })
 
     def _listar_monedas(self) -> None:
+        """Muestra todas las monedas."""
         for moneda in self._monedas.leer_todos():
             print(f"{moneda.id} | {moneda.codigo} | {moneda.nombre}")
 
     def _crear_moneda(self) -> None:
+        """Pide los datos y crea una moneda."""
         id = self._pedir_id_nuevo(self._monedas)
         nombre = self._pedir_texto("Nombre: ")
         codigo = self._pedir_texto("Código (ej: ARS): ")
@@ -158,6 +168,7 @@ class Consola:
         print("Se creó correctamente.")
 
     def _modificar_moneda(self) -> None:
+        """Pide los datos nuevos y modifica una moneda."""
         moneda = self._buscar(self._monedas, "ID: ")
         moneda.nombre = self._pedir_texto(f"Nombre [{moneda.nombre}]: ",
                                           moneda.nombre)
@@ -169,6 +180,7 @@ class Consola:
     # ---------- Libros ----------
 
     def _menu_libros(self) -> None:
+        """Menú de libros."""
         self._menu("LIBROS", {
             "1": ("Listar", self._listar_libros),
             "2": ("Crear", self._crear_libro),
@@ -177,11 +189,13 @@ class Consola:
         })
 
     def _listar_libros(self) -> None:
+        """Muestra todos los libros."""
         for libro in self._libros.leer_todos():
             print(f"{libro.id} | {libro.isbn} | {libro.titulo} | "
                   f"{libro.autor} | {libro.editorial} | {libro.genero}")
 
     def _crear_libro(self) -> None:
+        """Pide los datos y crea un libro."""
         id = self._pedir_id_nuevo(self._libros)
         isbn = self._pedir_texto("ISBN: ")
         titulo = self._pedir_texto("Título: ")
@@ -192,6 +206,7 @@ class Consola:
         print("Se creó correctamente.")
 
     def _modificar_libro(self) -> None:
+        """Pide los datos nuevos y modifica un libro."""
         libro = self._buscar(self._libros, "ID: ")
         libro.isbn = self._pedir_texto(f"ISBN [{libro.isbn}]: ", libro.isbn)
         libro.titulo = self._pedir_texto(f"Título [{libro.titulo}]: ",
@@ -213,6 +228,7 @@ class Consola:
     # ---------- Precios ----------
 
     def _menu_precios(self) -> None:
+        """Menú de precios, con cotización, lista bimonetaria y exportación."""
         self._menu("PRECIOS", {
             "1": ("Listar", self._listar_precios),
             "2": ("Crear", self._crear_precio),
@@ -224,11 +240,13 @@ class Consola:
         })
 
     def _listar_precios(self) -> None:
+        """Muestra todos los precios."""
         for precio in self._precios.leer_todos():
             print(f"{precio.id} | {precio.libro.titulo} | "
                   f"{precio.moneda.codigo} {precio.valor}")
 
     def _crear_precio(self) -> None:
+        """Pide los datos y crea un precio."""
         id = self._pedir_id_nuevo(self._precios)
         libro = self._buscar(self._libros, "ID del libro: ")
         moneda = self._buscar(self._monedas, "ID de la moneda: ")
@@ -237,6 +255,7 @@ class Consola:
         print("Se creó correctamente.")
 
     def _modificar_precio(self) -> None:
+        """Pide el valor nuevo y modifica un precio."""
         precio = self._buscar(self._precios, "ID: ")
         precio.valor = self._pedir_importe(f"Valor [{precio.valor}]: ",
                                            str(precio.valor))
@@ -244,6 +263,7 @@ class Consola:
         print("Se modificó correctamente.")
 
     def _cotizar_precio(self) -> None:
+        """Muestra cuánto sale un precio en pesos con el dólar elegido."""
         print("\nPrecios disponibles:")
         self._listar_precios()
         precio = self._buscar(self._precios, "ID del precio: ")
@@ -262,6 +282,7 @@ class Consola:
     # ---------- Stock ----------
 
     def _menu_stock(self) -> None:
+        """Menú de stock."""
         self._menu("STOCK", {
             "1": ("Listar", self._listar_stock),
             "2": ("Crear", self._crear_stock),
@@ -272,17 +293,20 @@ class Consola:
         })
 
     def _listar_stock(self) -> None:
+        """Muestra el stock de todos los libros."""
         for stock in self._stock.leer_todos():
             print(f"{stock.libro_id} | {stock.libro.titulo} | "
                   f"{stock.cantidad} unidades")
 
     def _crear_stock(self) -> None:
+        """Pide los datos y crea el stock de un libro."""
         libro = self._buscar(self._libros, "ID del libro: ")
         cantidad = self._pedir_entero("Cantidad: ")
         self._stock.crear(Stock(libro, cantidad))
         print("Se creó correctamente.")
 
     def _modificar_stock(self) -> None:
+        """Pide la cantidad nueva y modifica un stock."""
         stock = self._buscar_stock()
         stock.cantidad = self._pedir_entero(
             f"Cantidad [{stock.cantidad}]: ", stock.cantidad
@@ -291,23 +315,27 @@ class Consola:
         print("Se modificó correctamente.")
 
     def _eliminar_stock(self) -> None:
+        """Elimina el stock de un libro."""
         stock = self._buscar_stock()
         self._stock.eliminar(stock.libro_id)
         print("Se eliminó correctamente.")
 
     def _ingresar_stock(self) -> None:
+        """Suma unidades al stock de un libro."""
         stock = self._buscar_stock()
         cantidad = self._pedir_entero("Cantidad a ingresar: ")
         stock = self._stock.ingresar(stock.libro_id, cantidad)
         print(f"Ahora hay {stock.cantidad} unidades.")
 
     def _retirar_stock(self) -> None:
+        """Resta unidades del stock de un libro."""
         stock = self._buscar_stock()
         cantidad = self._pedir_entero("Cantidad a retirar: ")
         stock = self._stock.retirar(stock.libro_id, cantidad)
         print(f"Ahora hay {stock.cantidad} unidades.")
 
     def _buscar_stock(self) -> Stock:
+        """Pide el ID de un libro y devuelve su stock (ValueError si no tiene)."""
         libro_id = self._pedir_entero("ID del libro: ")
         stock = self._stock.leer_por_libro(libro_id)
         if stock is None:
@@ -317,6 +345,7 @@ class Consola:
     # ---------- Cotizaciones del dólar ----------
 
     def _menu_cotizaciones(self) -> None:
+        """Menú de cotizaciones del dólar, incluida la descarga por API."""
         self._menu("COTIZACIONES DEL DÓLAR", {
             "1": ("Listar todas", self._listar_cotizaciones),
             "2": ("Crear", self._crear_cotizacion),
@@ -327,10 +356,12 @@ class Consola:
         })
 
     def _listar_cotizaciones(self) -> None:
+        """Muestra todas las cotizaciones."""
         for cotizacion in self._cotizaciones.leer_todos():
             print(cotizacion)
 
     def _crear_cotizacion(self) -> None:
+        """Pide los datos y crea una cotización."""
         tipo = self._buscar(self._tipos_cotizacion,
                             "ID del tipo de cotización: ")
         fecha = self._pedir_fecha("Fecha (AAAA-MM-DD): ")
@@ -340,6 +371,7 @@ class Consola:
         print("Se creó correctamente.")
 
     def _modificar_cotizacion(self) -> None:
+        """Pide los valores nuevos y modifica una cotización."""
         cotizacion = self._buscar_cotizacion()
         cotizacion.compra = self._pedir_importe(
             f"Compra [{cotizacion.compra}]: ", str(cotizacion.compra)
@@ -351,11 +383,13 @@ class Consola:
         print("Se modificó correctamente.")
 
     def _eliminar_cotizacion(self) -> None:
+        """Elimina una cotización por tipo y fecha."""
         cotizacion = self._buscar_cotizacion()
         self._cotizaciones.eliminar(cotizacion.tipo_id, cotizacion.fecha)
         print("Se eliminó correctamente.")
 
     def _ver_historico(self) -> None:
+        """Muestra el histórico de cotizaciones de un tipo."""
         tipo = self._buscar(self._tipos_cotizacion,
                             "ID del tipo de cotización: ")
         historico = self._cotizaciones.leer_historico_por_tipo(tipo.id)
@@ -365,6 +399,7 @@ class Consola:
             print(cotizacion)
 
     def _buscar_cotizacion(self) -> CotizacionDolar:
+        """Pide tipo y fecha y devuelve la cotización (ValueError si no hay)."""
         tipo = self._buscar(self._tipos_cotizacion,
                             "ID del tipo de cotización: ")
         fecha = self._pedir_fecha("Fecha (AAAA-MM-DD): ")
@@ -390,6 +425,7 @@ class Consola:
 
     def _pedir_entero(self, mensaje: str,
                       actual: Optional[int] = None) -> int:
+        """Pide un número entero hasta que se escriba uno válido."""
         while True:
             valor = self._pedir(mensaje)
             if valor == "" and actual is not None:
@@ -405,6 +441,7 @@ class Consola:
         return self._pedir(mensaje).replace(",", ".") or actual
 
     def _pedir_fecha(self, mensaje: str) -> date:
+        """Pide una fecha AAAA-MM-DD hasta que se escriba una válida."""
         while True:
             try:
                 return date.fromisoformat(self._pedir(mensaje))
@@ -445,42 +482,59 @@ class Consola:
         return entidad
 
     def _eliminar(self, servicio: ServicioBase) -> None:
+        """Pide un ID y elimina ese registro."""
         entidad = self._buscar(servicio, "ID: ")
         servicio.eliminar(entidad.id)
         print("Se eliminó correctamente.")
 
     def _ver_precios_bimonetaria(self) -> None:
+        """Muestra los precios de los libros en una moneda elegida y su
+        equivalente en pesos, según el tipo de cotización y la fecha."""
         print("\n--- LISTA BIMONETARIA ---")
-        tipo = self._buscar(self._tipos_cotizacion, "ID del tipo de cotización a usar (ej. Blue): ")
-        fecha = self._pedir_fecha_opcional("Fecha (AAAA-MM-DD, vacío para hoy): ")
-        
-        print("\nLibro | Precio Original | Precio en ARS")
+        print("\nMonedas disponibles:")
+        self._listar_monedas()
+        moneda = self._buscar(self._monedas, "ID de la moneda a mostrar: ")
+        print("\nTipos de cotización disponibles:")
+        for tipo_c in self._tipos_cotizacion.leer_todos():
+            print(f"  {tipo_c.id} | {tipo_c.nombre}")
+        tipo = self._buscar(self._tipos_cotizacion,
+                            "ID del tipo de cotización a usar: ")
+        fecha = self._pedir_fecha_opcional(
+            "Fecha (AAAA-MM-DD, vacío para la última disponible): "
+        )
+
+        print(f"\nLibro | Precio en {moneda.codigo} | Precio en ARS")
         print("-" * 50)
-        for precio in self._precios.leer_todos():
-            # Intentamos convertir el precio a pesos usando la lógica que ya tienes en el servicio
+        precios = [p for p in self._precios.leer_todos()
+                   if p.moneda.id == moneda.id]
+        if not precios:
+            print(f"No hay precios cargados en {moneda.codigo}.")
+        for precio in precios:
             try:
-                valor_ars = self._precios.cotizar_en_pesos(precio.id, tipo.id, fecha)
-                print(f"{precio.libro.titulo} | {precio.moneda.codigo} {precio.valor} | ARS {valor_ars:.2f}")
-            except ValueError:
-                print(f"{precio.libro.titulo} | {precio.moneda.codigo} {precio.valor} | (No se pudo cotizar)")
+                valor_ars = self._precios.cotizar_en_pesos(precio.id,
+                                                           tipo.id, fecha)
+                print(f"{precio.libro.titulo} | {moneda.codigo} "
+                      f"{precio.valor} | ARS {valor_ars:.2f}")
+            except ValueError as error:
+                print(f"{precio.libro.titulo} | {moneda.codigo} "
+                      f"{precio.valor} | (No se pudo cotizar: {error})")
 
     def _exportar_precios_csv(self) -> None:
+        """Exporta a un CSV los precios de todos los libros en todas las
+        monedas."""
         ruta_archivo = "precios_exportados.csv"
-        with open(ruta_archivo, mode='w', newline='', encoding='utf-8') as archivo_csv:
+        with open(ruta_archivo, mode="w", newline="",
+                  encoding="utf-8") as archivo_csv:
             escritor = csv.writer(archivo_csv)
-            # Escribimos el encabezado
             escritor.writerow(["ID Libro", "Titulo", "Moneda", "Valor"])
-            
-            # Escribimos los datos de cada precio
             for precio in self._precios.leer_todos():
-                escritor.writerow([precio.libro.id, precio.libro.titulo, precio.moneda.codigo, precio.valor])
-                
-        print(f"Los precios se exportaron exitosamente al archivo: {ruta_archivo}")
+                escritor.writerow([precio.libro.id, precio.libro.titulo,
+                                   precio.moneda.codigo, precio.valor])
+        print(f"Los precios se exportaron al archivo: {ruta_archivo}")
 
     def _obtener_cotizaciones_api(self) -> None:
+        """Descarga las cotizaciones desde la API y las guarda en la
+        base."""
         print("Conectando con la API web para descargar cotizaciones...")
-        try:
-            self._cotizaciones.obtener_cotizaciones()
-            print("¡Cotizaciones descargadas y guardadas en la base de datos con éxito!")
-        except Exception as e:
-            print(f"Ocurrió un error al consultar la API: {e}")
+        guardadas = self._cotizaciones.obtener_cotizaciones()
+        print(f"Se guardaron {len(guardadas)} cotizaciones.")

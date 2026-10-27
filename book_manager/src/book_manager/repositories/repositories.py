@@ -1,161 +1,364 @@
-from typing import TypeVar, Generic, List, Optional
+"""Repositorios que guardan y leen las entidades usando SQLAlchemy.
+
+Cada repositorio traduce entre las entidades del dominio (clases puras de
+Python) y los modelos de la base de datos.
+"""
+
+import datetime
+from typing import Generic, List, Optional, TypeVar
+
+from sqlalchemy import inspect
+
 from ..database.connection import ConexionDB
-from ..models.models import (
-    GeneroModel, EditorialModel, MonedaModel, TipoCotizacionModel,
-    LibroModel, PrecioModel, StockModel, CotizacionDolarModel
-)
-# Importamos las Entidades puras de tu Sprint 1
-from ..entities.genero import Genero
+from ..entities.cotizacion_dolar import CotizacionDolar
 from ..entities.editorial import Editorial
-from ..entities.moneda import Moneda
-from ..entities.tipo_cotizacion import TipoCotizacion
+from ..entities.genero import Genero
 from ..entities.libro import Libro
+from ..entities.moneda import Moneda
 from ..entities.precio import Precio
 from ..entities.stock import Stock
-from ..entities.cotizacion_dolar import CotizacionDolar
+from ..entities.tipo_cotizacion import TipoCotizacion
+from ..models.models import (
+    CotizacionDolarModel, EditorialModel, GeneroModel, LibroModel,
+    MonedaModel, PrecioModel, StockModel, TipoCotizacionModel
+)
+from .interfaces import (
+    IRepositorio, IRepositorioCotizacionDolar, IRepositorioStock
+)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
-class RepositorioBase(Generic[T]):
-    """Repositorio traductor: Convierte entre Entidades de Python y Modelos de Base de Datos."""
-    
-    def __init__(self, db: ConexionDB, modelo_cls: type):
+
+class RepositorioBase(IRepositorio[T], Generic[T]):
+    """Repositorio genérico con el CRUD sobre SQLAlchemy.
+
+    Convierte entre entidades y modelos. Las clases hijas indican cómo
+    hacerlo implementando ``_a_modelo`` y ``_a_entidad``.
+    """
+
+    def __init__(self, db: ConexionDB, modelo_cls: type) -> None:
+        """Guarda la conexión y la clase del modelo con el que trabaja.
+
+        Args:
+            db (ConexionDB): Conexión a la base de datos.
+            modelo_cls (type): Clase del modelo SQLAlchemy de la tabla.
+        """
         self.db = db
         self.modelo_cls = modelo_cls
 
     def _a_modelo(self, entidad: T):
-        """Convierte una Entidad a un Modelo SQL (Debe implementarse en las hijas)"""
+        """Convierte una entidad en un modelo SQL (lo implementan las
+        clases hijas)."""
         raise NotImplementedError
 
     def _a_entidad(self, modelo) -> T:
-        """Convierte un Modelo SQL a una Entidad (Debe implementarse en las hijas)"""
+        """Convierte un modelo SQL en una entidad (lo implementan las
+        clases hijas)."""
         raise NotImplementedError
 
     def crear(self, entidad: T) -> T:
+        """Guarda una entidad nueva y la devuelve.
+
+        Args:
+            entidad (T): La entidad a crear.
+
+        Returns:
+            T: La misma entidad recibida.
+        """
         with self.db.obtener_sesion() as sesion:
             modelo = self._a_modelo(entidad)
             sesion.add(modelo)
-            sesion.flush() # Guardamos en BD
-            # Devolvemos la entidad original intacta, evitando errores de relaciones vacías
+            sesion.flush()
+            # Se devuelve la entidad original para no depender de las
+            # relaciones del modelo, que todavía no están cargadas.
             return entidad
 
-    def leer_por_id(self, id_entidad: int) -> Optional[T]:
+    def leer_por_id(self, id: int) -> Optional[T]:
+        """Busca una entidad por ID.
+
+        Args:
+            id (int): ID de la entidad.
+
+        Returns:
+            Optional[T]: La entidad, o None si no existe.
+        """
         with self.db.obtener_sesion() as sesion:
-            modelo = sesion.query(self.modelo_cls).filter(self.modelo_cls.id == id_entidad).first()
+            modelo = sesion.get(self.modelo_cls, id)
             return self._a_entidad(modelo) if modelo else None
 
     def leer_todos(self) -> List[T]:
+        """Devuelve todas las entidades de la tabla."""
         with self.db.obtener_sesion() as sesion:
             modelos = sesion.query(self.modelo_cls).all()
             return [self._a_entidad(m) for m in modelos]
 
     def actualizar(self, entidad: T) -> T:
+        """Actualiza una entidad que ya existe.
+
+        Args:
+            entidad (T): La entidad con los datos nuevos.
+
+        Returns:
+            T: La misma entidad recibida.
+
+        Raises:
+            ValueError: Si no existe un registro con esa clave.
+        """
         with self.db.obtener_sesion() as sesion:
             modelo = self._a_modelo(entidad)
+            clave = inspect(self.modelo_cls).primary_key_from_instance(
+                modelo
+            )
+            if sesion.get(self.modelo_cls, tuple(clave)) is None:
+                raise ValueError(
+                    f"No existe un registro con clave {tuple(clave)} "
+                    "para actualizar."
+                )
             sesion.merge(modelo)
             return entidad
 
-    def eliminar(self, id_entidad: int) -> bool:
+    def eliminar(self, id: int) -> bool:
+        """Elimina una entidad por ID.
+
+        Args:
+            id (int): ID de la entidad.
+
+        Returns:
+            bool: True si se eliminó, False si no existía.
+        """
         with self.db.obtener_sesion() as sesion:
-            modelo = sesion.query(self.modelo_cls).filter(self.modelo_cls.id == id_entidad).first()
+            modelo = sesion.get(self.modelo_cls, id)
             if modelo:
                 sesion.delete(modelo)
                 return True
             return False
 
-# --- Repositorios Específicos con sus Traductores ---
+
+# --- Repositorios específicos con sus traductores ---
+
 
 class RepositorioGenero(RepositorioBase[Genero]):
-    def __init__(self, db: ConexionDB): super().__init__(db, GeneroModel)
-    def _a_modelo(self, e: Genero): return GeneroModel(id=e.id, nombre=e.nombre)
-    def _a_entidad(self, m: GeneroModel): return Genero(m.id, m.nombre)
+    """Repositorio de géneros."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, GeneroModel)
+
+    def _a_modelo(self, e: Genero) -> GeneroModel:
+        """Convierte la entidad en su modelo SQL."""
+        return GeneroModel(id=e.id, nombre=e.nombre)
+
+    def _a_entidad(self, m: GeneroModel) -> Genero:
+        """Convierte el modelo SQL en su entidad."""
+        return Genero(m.id, m.nombre)
+
 
 class RepositorioEditorial(RepositorioBase[Editorial]):
-    def __init__(self, db: ConexionDB): super().__init__(db, EditorialModel)
-    def _a_modelo(self, e: Editorial): return EditorialModel(id=e.id, nombre=e.nombre)
-    def _a_entidad(self, m: EditorialModel): return Editorial(m.id, m.nombre)
+    """Repositorio de editoriales."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, EditorialModel)
+
+    def _a_modelo(self, e: Editorial) -> EditorialModel:
+        """Convierte la entidad en su modelo SQL."""
+        return EditorialModel(id=e.id, nombre=e.nombre)
+
+    def _a_entidad(self, m: EditorialModel) -> Editorial:
+        """Convierte el modelo SQL en su entidad."""
+        return Editorial(m.id, m.nombre)
+
 
 class RepositorioTipoCotizacion(RepositorioBase[TipoCotizacion]):
-    def __init__(self, db: ConexionDB): super().__init__(db, TipoCotizacionModel)
-    def _a_modelo(self, e: TipoCotizacion): return TipoCotizacionModel(id=e.id, nombre=e.nombre)
-    def _a_entidad(self, m: TipoCotizacionModel): return TipoCotizacion(m.id, m.nombre)
+    """Repositorio de tipos de cotización."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, TipoCotizacionModel)
+
+    def _a_modelo(self, e: TipoCotizacion) -> TipoCotizacionModel:
+        """Convierte la entidad en su modelo SQL."""
+        return TipoCotizacionModel(id=e.id, nombre=e.nombre)
+
+    def _a_entidad(self, m: TipoCotizacionModel) -> TipoCotizacion:
+        """Convierte el modelo SQL en su entidad."""
+        return TipoCotizacion(m.id, m.nombre)
+
 
 class RepositorioMoneda(RepositorioBase[Moneda]):
-    def __init__(self, db: ConexionDB): super().__init__(db, MonedaModel)
-    def _a_modelo(self, e: Moneda): return MonedaModel(id=e.id, nombre=e.nombre, codigo=e.codigo)
-    def _a_entidad(self, m: MonedaModel): return Moneda(m.id, m.nombre, m.codigo)
+    """Repositorio de monedas."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, MonedaModel)
+
+    def _a_modelo(self, e: Moneda) -> MonedaModel:
+        """Convierte la entidad en su modelo SQL."""
+        return MonedaModel(id=e.id, nombre=e.nombre, codigo=e.codigo)
+
+    def _a_entidad(self, m: MonedaModel) -> Moneda:
+        """Convierte el modelo SQL en su entidad."""
+        return Moneda(m.id, m.nombre, m.codigo)
+
+
+def _libro_a_entidad(m: LibroModel) -> Libro:
+    """Arma la entidad Libro (con su editorial y género) desde el modelo."""
+    editorial = Editorial(m.editorial.id, m.editorial.nombre)
+    genero = Genero(m.genero.id, m.genero.nombre)
+    return Libro(m.id, m.isbn, m.titulo, m.autor, editorial, genero)
+
 
 class RepositorioLibro(RepositorioBase[Libro]):
-    def __init__(self, db: ConexionDB): super().__init__(db, LibroModel)
-    def _a_modelo(self, e: Libro):
-        return LibroModel(id=e.id, isbn=e.isbn, titulo=e.titulo, autor=e.autor, 
-                          editorial_id=e.editorial.id, genero_id=e.genero.id)
-    def _a_entidad(self, m: LibroModel):
-        editorial = Editorial(m.editorial.id, m.editorial.nombre)
-        genero = Genero(m.genero.id, m.genero.nombre)
-        return Libro(m.id, m.isbn, m.titulo, m.autor, editorial, genero)
+    """Repositorio de libros."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, LibroModel)
+
+    def _a_modelo(self, e: Libro) -> LibroModel:
+        """Convierte la entidad en su modelo SQL."""
+        return LibroModel(id=e.id, isbn=e.isbn, titulo=e.titulo,
+                          autor=e.autor, editorial_id=e.editorial.id,
+                          genero_id=e.genero.id)
+
+    def _a_entidad(self, m: LibroModel) -> Libro:
+        """Convierte el modelo SQL en su entidad."""
+        return _libro_a_entidad(m)
+
 
 class RepositorioPrecio(RepositorioBase[Precio]):
-    def __init__(self, db: ConexionDB): super().__init__(db, PrecioModel)
-    def _a_modelo(self, e: Precio):
-        return PrecioModel(id=e.id, valor=e.valor, libro_id=e.libro.id, moneda_id=e.moneda.id)
-    def _a_entidad(self, m: PrecioModel):
-        editorial = Editorial(m.libro.editorial.id, m.libro.editorial.nombre)
-        genero = Genero(m.libro.genero.id, m.libro.genero.nombre)
-        libro = Libro(m.libro.id, m.libro.isbn, m.libro.titulo, m.libro.autor, editorial, genero)
+    """Repositorio de precios."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, PrecioModel)
+
+    def _a_modelo(self, e: Precio) -> PrecioModel:
+        """Convierte la entidad en su modelo SQL."""
+        return PrecioModel(id=e.id, valor=e.valor, libro_id=e.libro.id,
+                           moneda_id=e.moneda.id)
+
+    def _a_entidad(self, m: PrecioModel) -> Precio:
+        """Convierte el modelo SQL en su entidad."""
+        libro = _libro_a_entidad(m.libro)
         moneda = Moneda(m.moneda.id, m.moneda.nombre, m.moneda.codigo)
         return Precio(m.id, libro, moneda, m.valor)
 
-class RepositorioStock(RepositorioBase[Stock]):
-    def __init__(self, db: ConexionDB): super().__init__(db, StockModel)
-    def _a_modelo(self, e: Stock):
+
+class RepositorioStock(RepositorioBase[Stock], IRepositorioStock):
+    """Repositorio de stock (la clave es el ID del libro)."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, StockModel)
+
+    def _a_modelo(self, e: Stock) -> StockModel:
+        """Convierte la entidad en su modelo SQL."""
         return StockModel(libro_id=e.libro.id, cantidad=e.cantidad)
-    def _a_entidad(self, m: StockModel):
-        editorial = Editorial(m.libro.editorial.id, m.libro.editorial.nombre)
-        genero = Genero(m.libro.genero.id, m.libro.genero.nombre)
-        libro = Libro(m.libro.id, m.libro.isbn, m.libro.titulo, m.libro.autor, editorial, genero)
-        return Stock(libro, m.cantidad)
-        
+
+    def _a_entidad(self, m: StockModel) -> Stock:
+        """Convierte el modelo SQL en su entidad."""
+        return Stock(_libro_a_entidad(m.libro), m.cantidad)
+
+    def leer_por_id(self, id: int) -> Optional[Stock]:
+        """El stock se identifica por el ID de su libro."""
+        return self.leer_por_libro(id)
+
     def leer_por_libro(self, libro_id: int) -> Optional[Stock]:
+        """Busca el stock de un libro.
+
+        Args:
+            libro_id (int): ID del libro.
+
+        Returns:
+            Optional[Stock]: El stock, o None si el libro no tiene.
+        """
         with self.db.obtener_sesion() as sesion:
-            m = sesion.query(StockModel).filter(StockModel.libro_id == libro_id).first()
+            m = sesion.get(StockModel, libro_id)
             return self._a_entidad(m) if m else None
 
     def eliminar(self, libro_id: int) -> bool:
+        """Elimina el stock de un libro.
+
+        Args:
+            libro_id (int): ID del libro.
+
+        Returns:
+            bool: True si se eliminó, False si no existía.
+        """
         with self.db.obtener_sesion() as sesion:
-            m = sesion.query(StockModel).filter(StockModel.libro_id == libro_id).first()
+            m = sesion.get(StockModel, libro_id)
             if m:
                 sesion.delete(m)
                 return True
             return False
 
-class RepositorioCotizacionDolar(RepositorioBase[CotizacionDolar]):
-    def __init__(self, db: ConexionDB): super().__init__(db, CotizacionDolarModel)
-    def _a_modelo(self, e: CotizacionDolar):
-        return CotizacionDolarModel(tipo_id=e.tipo.id, fecha=e.fecha, compra=e.compra, venta=e.venta)
-    def _a_entidad(self, m: CotizacionDolarModel):
+
+class RepositorioCotizacionDolar(RepositorioBase[CotizacionDolar],
+                                 IRepositorioCotizacionDolar):
+    """Repositorio de cotizaciones del dólar (clave: tipo + fecha)."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Indica el modelo SQL con el que trabaja el repositorio."""
+        super().__init__(db, CotizacionDolarModel)
+
+    def _a_modelo(self, e: CotizacionDolar) -> CotizacionDolarModel:
+        """Convierte la entidad en su modelo SQL."""
+        return CotizacionDolarModel(tipo_id=e.tipo.id, fecha=e.fecha,
+                                    compra=e.compra, venta=e.venta)
+
+    def _a_entidad(self, m: CotizacionDolarModel) -> CotizacionDolar:
+        """Convierte el modelo SQL en su entidad."""
         tipo = TipoCotizacion(m.tipo.id, m.tipo.nombre)
         return CotizacionDolar(tipo, m.fecha, m.compra, m.venta)
 
-    def leer_por_tipo_y_fecha(self, tipo_id: int, fecha) -> Optional[CotizacionDolar]:
+    def leer_por_tipo_y_fecha(
+        self, tipo_id: int, fecha: datetime.date
+    ) -> Optional[CotizacionDolar]:
+        """Busca la cotización de un tipo en una fecha.
+
+        Args:
+            tipo_id (int): ID del tipo de cotización.
+            fecha (datetime.date): Fecha de la cotización.
+
+        Returns:
+            Optional[CotizacionDolar]: La cotización, o None si no hay.
+        """
         with self.db.obtener_sesion() as sesion:
-            m = sesion.query(CotizacionDolarModel).filter(
-                CotizacionDolarModel.tipo_id == tipo_id,
-                CotizacionDolarModel.fecha == fecha
-            ).first()
+            m = sesion.get(CotizacionDolarModel, (tipo_id, fecha))
             return self._a_entidad(m) if m else None
 
     def leer_historico_por_tipo(self, tipo_id: int) -> List[CotizacionDolar]:
+        """Devuelve las cotizaciones de un tipo, de la más vieja a la más
+        nueva.
+
+        Args:
+            tipo_id (int): ID del tipo de cotización.
+
+        Returns:
+            List[CotizacionDolar]: El histórico ordenado por fecha.
+        """
         with self.db.obtener_sesion() as sesion:
-            modelos = sesion.query(CotizacionDolarModel).filter(CotizacionDolarModel.tipo_id == tipo_id).all()
+            modelos = (
+                sesion.query(CotizacionDolarModel)
+                .filter(CotizacionDolarModel.tipo_id == tipo_id)
+                .order_by(CotizacionDolarModel.fecha)
+                .all()
+            )
             return [self._a_entidad(m) for m in modelos]
 
-    def eliminar(self, tipo_id: int, fecha) -> bool:
+    def eliminar(self, tipo_id: int, fecha: datetime.date) -> bool:
+        """Elimina la cotización de un tipo en una fecha.
+
+        Args:
+            tipo_id (int): ID del tipo de cotización.
+            fecha (datetime.date): Fecha de la cotización.
+
+        Returns:
+            bool: True si se eliminó, False si no existía.
+        """
         with self.db.obtener_sesion() as sesion:
-            m = sesion.query(CotizacionDolarModel).filter(
-                CotizacionDolarModel.tipo_id == tipo_id,
-                CotizacionDolarModel.fecha == fecha
-            ).first()
+            m = sesion.get(CotizacionDolarModel, (tipo_id, fecha))
             if m:
                 sesion.delete(m)
                 return True

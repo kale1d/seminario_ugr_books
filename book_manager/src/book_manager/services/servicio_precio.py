@@ -1,3 +1,5 @@
+"""Servicio de precios y conversión a pesos."""
+
 from datetime import date
 from decimal import Decimal
 from typing import Optional
@@ -21,12 +23,14 @@ class ServicioPrecio(ServicioBase[Precio]):
                  libros: IRepositorio[Libro],
                  monedas: IRepositorio[Moneda],
                  cotizaciones: ServicioCotizacionDolar) -> None:
+        """Guarda los repositorios y el servicio de cotizaciones que usa."""
         super().__init__(repositorio)
         self._libros = libros
         self._monedas = monedas
         self._cotizaciones = cotizaciones
 
     def _validar(self, entidad: Precio) -> None:
+        """Verifica que existan el libro y la moneda y que no haya otro precio del libro en esa moneda."""
         super()._validar(entidad)
         exigir_existente(self._libros, entidad.libro.id, "libro")
         exigir_existente(self._monedas, entidad.moneda.id, "moneda")

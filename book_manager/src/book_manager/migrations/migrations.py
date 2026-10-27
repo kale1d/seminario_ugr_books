@@ -1,7 +1,16 @@
+"""Migración de los datos de los CSV a la base de datos."""
+
 import csv
 import os
 from sqlalchemy import text
 from ..database.connection import ConexionDB
+
+def _literal_sql(valor: str) -> str:
+    """Devuelve el valor como texto SQL entre comillas simples, duplicando
+    las comillas que tenga adentro para que no rompan la sentencia."""
+    comilla_doble = "''"
+    return "'" + str(valor).replace("'", comilla_doble) + "'"
+
 
 def migrar_datos(carpeta_csvs: str, carpeta_sqls: str, db: ConexionDB = None):
     """ Función encargada de la migración de datos de csv a sql.
@@ -53,7 +62,7 @@ def migrar_datos(carpeta_csvs: str, carpeta_sqls: str, db: ConexionDB = None):
                     # Obtenemos los nombres de las columnas
                     columnas = ", ".join(fila.keys())
                     # Obtenemos los valores. Escapamos las comillas simples para SQL
-                    valores = ", ".join(f"'{str(v).replace('\'', '\'\'')}'" for v in fila.values())
+                    valores = ", ".join(_literal_sql(v) for v in fila.values())
                     
                     # 5. Armamos la sentencia SQL (ON CONFLICT DO NOTHING evita errores
                     #    si los datos ya existen en la base de datos)

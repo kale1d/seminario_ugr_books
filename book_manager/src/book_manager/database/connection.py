@@ -1,5 +1,6 @@
+"""Conexión a la base de datos con SQLAlchemy."""
+
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import contextmanager
 from sqlalchemy import create_engine
@@ -13,6 +14,7 @@ class ConexionDB:
     """Maneja la conexión a la base de datos usando SQLAlchemy."""
     
     def __init__(self):
+        """Lee DATABASE_URL del .env y crea el motor y la fábrica de sesiones."""
         db_url = os.getenv("DATABASE_URL")
         
         if not db_url:

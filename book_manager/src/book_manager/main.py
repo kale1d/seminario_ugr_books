@@ -1,10 +1,9 @@
+"""Punto de entrada del gestor de libros."""
+
 from pathlib import Path
 
-# Importamos nuestra nueva conexión y el script de migración del Sprint 2
 from .database.connection import ConexionDB
 from .migrations.migrations import migrar_datos
-
-# Importamos desde los archivos directamente para evitar conflictos con archivos viejos
 from .repositories.repositories import (
     RepositorioCotizacionDolar, RepositorioEditorial, RepositorioGenero,
     RepositorioLibro, RepositorioMoneda, RepositorioPrecio,
@@ -17,6 +16,7 @@ from .services.services import (
 )
 from .ui.console import Consola
 
+
 def crear_consola(db: ConexionDB) -> Consola:
     """Arma los repositorios y servicios conectándolos a SQLAlchemy."""
     repo_generos = RepositorioGenero(db)
@@ -24,9 +24,9 @@ def crear_consola(db: ConexionDB) -> Consola:
     repo_monedas = RepositorioMoneda(db)
     repo_tipos = RepositorioTipoCotizacion(db)
     repo_libros = RepositorioLibro(db)
-    
+
     cotizaciones = ServicioCotizacionDolar(RepositorioCotizacionDolar(db), repo_tipos)
-    
+
     return Consola(
         generos=ServicioGenero(repo_generos),
         editoriales=ServicioEditorial(repo_editoriales),
@@ -38,22 +38,24 @@ def crear_consola(db: ConexionDB) -> Consola:
         cotizaciones=cotizaciones,
     )
 
-def main(ejecutar_migracion: bool = True) -> None:
-    """Inicia el sistema, migra los datos y abre la consola."""
-    # 1. Iniciamos nuestra conexión a la base de datos
+
+def main(import_default_data: bool = True) -> None:
+    """Inicia el sistema, migra los datos y abre la consola.
+
+    Args:
+        import_default_data (bool): Si es True se migran los CSV de
+            migrations/csv a la base antes de abrir el menú.
+    """
     db = ConexionDB()
-    
-    if ejecutar_migracion:
-        # 2. Definimos las rutas dinámicas a nuestras carpetas de migración
+
+    if import_default_data:
         ruta_base = Path(__file__).parent
         carpeta_csvs = ruta_base / "migrations" / "csv"
         carpeta_sqls = ruta_base / "migrations" / "sql"
-        
-        # 3. Ejecutamos el script de migración del Ejercicio 05
         migrar_datos(str(carpeta_csvs), str(carpeta_sqls), db)
-        
-    # 4. Abrimos el menú principal
+
     crear_consola(db).ejecutar()
+
 
 if __name__ == "__main__":
     main()

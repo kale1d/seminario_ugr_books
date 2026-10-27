@@ -1,3 +1,5 @@
+"""Servicio de editoriales."""
+
 from ..entities.editorial import Editorial
 from .servicio_base import ServicioBase
 

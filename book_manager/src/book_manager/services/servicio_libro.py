@@ -1,3 +1,5 @@
+"""Servicio de libros."""
+
 from ..entities.editorial import Editorial
 from ..entities.genero import Genero
 from ..entities.libro import Libro
@@ -15,11 +17,13 @@ class ServicioLibro(ServicioBase[Libro]):
     def __init__(self, repositorio: IRepositorio[Libro],
                  editoriales: IRepositorio[Editorial],
                  generos: IRepositorio[Genero]) -> None:
+        """Guarda los repositorios de libros, editoriales y géneros."""
         super().__init__(repositorio)
         self._editoriales = editoriales
         self._generos = generos
 
     def _validar(self, entidad: Libro) -> None:
+        """Verifica que existan la editorial y el género y que no se repita el ISBN."""
         super()._validar(entidad)
         exigir_existente(self._editoriales, entidad.editorial.id, "editorial")
         exigir_existente(self._generos, entidad.genero.id, "género")
