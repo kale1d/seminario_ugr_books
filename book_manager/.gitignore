@@ -2,3 +2,5 @@ __pycache__/
 *.py[cod]
 .DS_Store
 .venv/
+src/book_manager/reportes/*
+!src/book_manager/reportes/.gitkeep
