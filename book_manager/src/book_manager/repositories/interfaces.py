@@ -6,6 +6,7 @@ from typing import Generic, List, Optional, TypeVar
 
 from ..entities.cotizacion_dolar import CotizacionDolar
 from ..entities.entidad_base import EntidadBase
+from ..entities.precio_web import PrecioWeb
 from ..entities.stock import Stock
 
 T = TypeVar("T", bound=EntidadBase)
@@ -215,4 +216,15 @@ class IRepositorioCotizacionDolar(abc.ABC):
         Returns:
             bool: True si la cotización fue eliminada, False si no se
             encontró.
+        """
+class IRepositorioPrecioWeb(abc.ABC):
+    """Interfaz para repositorios de los precios obtenidos de la web."""
+
+    @abc.abstractmethod
+    def leer_ultimas(self) -> List[PrecioWeb]:
+        """Lee, para cada libro, los precios de su extracción más reciente.
+
+        Returns:
+            List[PrecioWeb]: Los precios web de la última extracción de
+            cada libro del catálogo.
         """

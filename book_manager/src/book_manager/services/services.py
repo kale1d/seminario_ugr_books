@@ -13,3 +13,5 @@ from .servicio_libro import ServicioLibro
 from .servicio_precio import ServicioPrecio
 from .servicio_stock import ServicioStock
 from .servicio_cotizacion_dolar import ServicioCotizacionDolar
+from .servicio_comparacion import ServicioComparacion
+from .servicio_scraping import ServicioScraping

@@ -7,7 +7,7 @@ Python) y los modelos de la base de datos.
 import datetime
 from typing import Generic, List, Optional, TypeVar
 
-from sqlalchemy import inspect
+from sqlalchemy import and_, func, inspect
 
 from ..database.connection import ConexionDB
 from ..entities.cotizacion_dolar import CotizacionDolar
@@ -16,14 +16,17 @@ from ..entities.genero import Genero
 from ..entities.libro import Libro
 from ..entities.moneda import Moneda
 from ..entities.precio import Precio
+from ..entities.precio_web import PrecioWeb
 from ..entities.stock import Stock
 from ..entities.tipo_cotizacion import TipoCotizacion
 from ..models.models import (
     CotizacionDolarModel, EditorialModel, GeneroModel, LibroModel,
-    MonedaModel, PrecioModel, StockModel, TipoCotizacionModel
+    MonedaModel, PrecioModel, StockModel, TipoCotizacionModel,
+    PrecioWebModel
 )
 from .interfaces import (
-    IRepositorio, IRepositorioCotizacionDolar, IRepositorioStock
+    IRepositorio, IRepositorioCotizacionDolar, IRepositorioStock,
+    IRepositorioPrecioWeb
 )
 
 T = TypeVar("T")
@@ -363,3 +366,45 @@ class RepositorioCotizacionDolar(RepositorioBase[CotizacionDolar],
                 sesion.delete(m)
                 return True
             return False
+class RepositorioPrecioWeb(IRepositorioPrecioWeb):
+    """Repositorio de los precios extraídos de la web."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Guarda la conexión a la base de datos."""
+        self.db = db
+
+    def leer_ultimas(self) -> List[PrecioWeb]:
+        """Lee, para cada libro, los precios de su extracción más reciente.
+
+        Returns:
+            List[PrecioWeb]: Los precios web de la última extracción de
+            cada libro del catálogo.
+        """
+        with self.db.obtener_sesion() as sesion:
+            ultimas = (
+                sesion.query(
+                    PrecioWebModel.libro_id,
+                    func.max(PrecioWebModel.fecha_extraccion).label("fecha"),
+                )
+                .group_by(PrecioWebModel.libro_id)
+                .subquery()
+            )
+            modelos = (
+                sesion.query(PrecioWebModel)
+                .join(ultimas, and_(
+                    PrecioWebModel.libro_id == ultimas.c.libro_id,
+                    PrecioWebModel.fecha_extraccion == ultimas.c.fecha,
+                ))
+                .all()
+            )
+            return [self._a_entidad(m) for m in modelos]
+
+    @staticmethod
+    def _a_entidad(m: PrecioWebModel) -> PrecioWeb:
+        """Convierte el modelo SQL en su entidad."""
+        return PrecioWeb(
+            libro_id=m.libro_id, titulo_web=m.titulo_web, precio=m.precio,
+            url_detalle=m.url_detalle, fecha_extraccion=m.fecha_extraccion,
+            isbn=m.isbn, precio_usd=m.precio_usd, url_imagen=m.url_imagen,
+            formas_pago=m.formas_pago, descripcion=m.descripcion,
+        )

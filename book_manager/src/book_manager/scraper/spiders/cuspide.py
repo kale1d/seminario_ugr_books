@@ -33,6 +33,7 @@ class CuspideSpider(scrapy.Spider):
     def __init__(self, libro_id: Optional[str] = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.libros = self._leer_libros(libro_id)
+        self.fecha_extraccion = datetime.now()
 
     @staticmethod
     def _leer_libros(libro_id: Optional[str]) -> list[Libro]:
@@ -76,5 +77,5 @@ class CuspideSpider(scrapy.Spider):
         cargador.add_css("formas_pago", "#contentPaymentsPopUpArg li::text")
         cargador.add_css("descripcion", "p.livriz-text-synopsis ::text")
         cargador.add_value("url_detalle", response.url)
-        cargador.add_value("fecha_extraccion", datetime.now())
+        cargador.add_value("fecha_extraccion", self.fecha_extraccion)
         yield cargador.load_item()
