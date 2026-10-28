@@ -1,4 +1,4 @@
 # Sin dependencias externas por el momento.
-scrapy
+scrapy>=2.19.
 pandas
 openpyxl
