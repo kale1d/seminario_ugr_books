@@ -5,7 +5,10 @@ sentidos con ``back_populates`` (por ejemplo, un libro conoce a su
 editorial y una editorial conoce a sus libros).
 """
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String
+from sqlalchemy import (
+    JSON, Column, Date, DateTime, ForeignKey, Integer, Numeric, 
+    String, Text
+    )
 from sqlalchemy.orm import relationship
 
 from ..database.connection import Base
@@ -91,6 +94,8 @@ class LibroModel(Base):
                            passive_deletes="all")
     stock = relationship("StockModel", back_populates="libro",
                          uselist=False, passive_deletes="all")
+    precios_web = relationship("PrecioWebModel", back_populates="libro",
+                               passive_deletes="all")
 
 
 class PrecioModel(Base):
@@ -135,3 +140,22 @@ class CotizacionDolarModel(Base):
 
     tipo = relationship("TipoCotizacionModel",
                         back_populates="cotizaciones", lazy="joined")
+class PrecioWebModel(Base):
+    """Tabla de precios obtenidos de la web (Cúspide) en cada extracción."""
+
+    __tablename__ = "precios_web"
+
+    id = Column(Integer, primary_key=True)
+    libro_id = Column(Integer, ForeignKey("libros.id"), nullable=False)
+    titulo_web = Column(String)
+    isbn = Column(String)
+    precio = Column(Numeric(12, 2), nullable=False)
+    precio_usd = Column(Numeric(10, 2))
+    url_imagen = Column(String)
+    formas_pago = Column(JSON)
+    descripcion = Column(Text)
+    url_detalle = Column(String, nullable=False)
+    fecha_extraccion = Column(DateTime, nullable=False)
+
+    libro = relationship("LibroModel", back_populates="precios_web",
+                         lazy="joined")

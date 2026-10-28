@@ -1,5 +1,19 @@
 # Registro de cambios
 
+## [Ejercicio 03]
+- Nuevo scraper `CuspideSpider` (Scrapy): busca en Cúspide cada título del catálogo y extrae las fichas de los 10 primeros resultados (precio en pesos y en dólares, ISBN, URL de la imagen, formas de pago y descripción detallada).
+- `LibroWebItem`: estructura de los datos extraídos.
+- `LibroWebLoader`: limpieza de textos, conversión de precios a `Decimal` y limpieza de los medios de pago.
+- Pipelines: validación, descarte de fichas duplicadas y guardado en la tabla `precios_web`.
+- Nuevo modelo `PrecioWebModel` (tabla `precios_web`) con relación bidireccional con `LibroModel`.
+- `settings.py` con reglas de cortesía: respeta el robots.txt, una petición a la vez y pausa de 1,5 segundos.
+- `runner.py`: ejecuta el scraper en un proceso independiente, porque el reactor de Twisted no se puede reiniciar dentro del mismo proceso.
+
+## [Ejercicio 02]
+- Nueva función `cargar_datos_desde_sql` en `migrations.py`: ejecuta los archivos `.sql` en el orden de las tablas y dentro de una única transacción.
+- Nueva función `generar_sqls`: genera los `.sql` a partir de los CSV.
+- `migrar_datos` ahora coordina `generar_sqls` y `cargar_datos_desde_sql`.
+
 ## [Ejercicio 01]
 - Creación de la rama `Sprint_3` a partir de `Sprint_2`.
 - Nuevas carpetas `scraper/` (con `spiders/`) y `reportes/` en la estructura del proyecto.
@@ -7,15 +21,7 @@
 - `.gitignore` excluye el contenido generado en `reportes/`.
 - README actualizado con el objetivo y el contexto del Sprint 3.
 
-## [Ejercicio 02]
-- Nueva función `cargar_datos_desde_sql` en `migrations.py`: ejecuta los archivos `.sql` en el orden de las tablas y dentro de una única transacción.
-- Nueva función `generar_sqls`: genera los `.sql` a partir de los CSV.
-- `migrar_datos` ahora coordina `generar_sqls` y `cargar_datos_desde_sql`.
-
-
-
------------------------------------------------------------------------------
------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
 
 ## [Día 1 - Correcciones del Sprint 2]
 - Modelos: las relaciones de `LibroModel`, `PrecioModel`, `StockModel` y `CotizacionDolarModel` ahora son bidireccionales con `back_populates`, y se agregaron las relaciones inversas en `GeneroModel`, `EditorialModel`, `MonedaModel`, `TipoCotizacionModel` y `LibroModel`.
