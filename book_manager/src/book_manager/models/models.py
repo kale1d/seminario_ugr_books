@@ -159,3 +159,14 @@ class PrecioWebModel(Base):
 
     libro = relationship("LibroModel", back_populates="precios_web",
                          lazy="joined")
+
+
+class AuditoriaModel(Base):
+    """Tabla del historial de auditoría: qué se hizo y cuándo."""
+
+    __tablename__ = "auditoria"
+
+    id = Column(Integer, primary_key=True)
+    accion = Column(String, nullable=False)
+    fecha = Column(DateTime, nullable=False)
+    detalles = Column(Text)

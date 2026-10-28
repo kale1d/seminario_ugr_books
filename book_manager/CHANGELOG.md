@@ -1,5 +1,19 @@
 # Registro de cambios
 
+## [Ejercicio 07]
+- Menú principal: nuevas opciones 9 (Ejecutar scraping), 10 (Generar reporte) y 11 (Ver historial de auditoría).
+- Ejecutar scraping pide la diferencia mínima de precio en porcentaje (valida que sea un número igual o mayor a 0), lanza el scraper y genera el CSV de alertas; muestra los totales y el archivo generado.
+- Generar reporte crea el Excel de precios y muestra su ruta.
+- Ver historial de auditoría lista los últimos 50 registros, del más nuevo al más viejo.
+- `Consola` recibe `ServicioScraping`, `ServicioReporte` y `ServicioAuditoria`; `main` arma el `ServicioComparacion` que usan el scraping y el reporte.
+
+## [Ejercicio 06]
+- Nueva entidad `Auditoria`, modelo `AuditoriaModel` (tabla `auditoria` con acción, fecha y detalles), interfaz `IRepositorioAuditoria` y repositorio `RepositorioAuditoria`.
+- Nuevo `ServicioAuditoria` (`registrar` y `leer_historial`).
+- Decorador `@auditar(accion)`: registra cada operación del servicio con sus argumentos y si terminó bien o con error (sin ocultar la excepción).
+- Auditadas todas las operaciones que modifican datos o generan resultados: `crear`, `actualizar` y `eliminar` de todos los servicios, `ingresar` y `retirar` stock, `obtener_cotizaciones`, `generar_alertas`, `generar_excel` y `ejecutar` scraping.
+- Los servicios reciben el `ServicioAuditoria` opcional por constructor; `main` los arma con auditoría y crea las tablas faltantes al iniciar.
+
 ## [Ejercicio 05]
 - Nuevo `ServicioReporte`: genera un Excel con pandas (`openpyxl`) con las columnas Libro, Precio interno, Precio web, Diferencia y Fecha de extracción.
 - El reporte reutiliza `ServicioComparacion.comparar()`, por lo que usa el mismo criterio que las alertas: precio web más barato entre las ediciones coincidentes.

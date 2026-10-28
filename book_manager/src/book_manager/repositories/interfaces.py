@@ -4,6 +4,7 @@ import abc
 import datetime
 from typing import Generic, List, Optional, TypeVar
 
+from ..entities.auditoria import Auditoria
 from ..entities.cotizacion_dolar import CotizacionDolar
 from ..entities.entidad_base import EntidadBase
 from ..entities.precio_web import PrecioWeb
@@ -227,4 +228,27 @@ class IRepositorioPrecioWeb(abc.ABC):
         Returns:
             List[PrecioWeb]: Los precios web de la última extracción de
             cada libro del catálogo.
+        """
+
+
+class IRepositorioAuditoria(abc.ABC):
+    """Interfaz para el repositorio del historial de auditoría."""
+
+    @abc.abstractmethod
+    def crear(self, auditoria: Auditoria) -> Auditoria:
+        """Guarda un registro de auditoría.
+
+        Args:
+            auditoria (Auditoria): El registro a guardar.
+
+        Returns:
+            Auditoria: El registro guardado, con su ID asignado.
+        """
+
+    @abc.abstractmethod
+    def leer_todos(self) -> List[Auditoria]:
+        """Devuelve el historial, del registro más nuevo al más viejo.
+
+        Returns:
+            List[Auditoria]: Todos los registros de auditoría.
         """

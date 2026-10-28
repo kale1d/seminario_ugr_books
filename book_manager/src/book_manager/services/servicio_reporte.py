@@ -2,9 +2,11 @@
 
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
+from .servicio_auditoria import ServicioAuditoria, auditar
 from .servicio_comparacion import CARPETA_REPORTES, ServicioComparacion
 
 COLUMNAS = [
@@ -23,17 +25,22 @@ class ServicioReporte:
     de la web."""
 
     def __init__(self, comparacion: ServicioComparacion,
-                 carpeta_reportes: Path = CARPETA_REPORTES) -> None:
+                 carpeta_reportes: Path = CARPETA_REPORTES,
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
         """Guarda el servicio de comparación y la carpeta de destino.
 
         Args:
             comparacion (ServicioComparacion): Servicio que compara los
                 precios de cada libro con los de la web.
             carpeta_reportes (Path): Carpeta donde se guarda el Excel.
+            auditoria (Optional[ServicioAuditoria]): Servicio donde se
+                registran las operaciones.
         """
         self._comparacion = comparacion
         self._carpeta = Path(carpeta_reportes)
+        self._auditoria = auditoria
 
+    @auditar("Generar reporte Excel")
     def generar_excel(self) -> Path:
         """Genera el Excel con una fila por libro del catálogo.
 

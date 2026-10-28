@@ -4,6 +4,7 @@ from typing import Generic, List, Optional, TypeVar
 
 from ..entities.entidad_base import EntidadBase
 from ..repositories.interfaces import IRepositorio
+from .servicio_auditoria import ServicioAuditoria, auditar
 
 T = TypeVar("T", bound=EntidadBase)
 
@@ -17,10 +18,14 @@ class ServicioBase(Generic[T]):
 
     tipo: type
 
-    def __init__(self, repositorio: IRepositorio[T]) -> None:
-        """Guarda el repositorio con el que trabaja el servicio."""
+    def __init__(self, repositorio: IRepositorio[T],
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
+        """Guarda el repositorio con el que trabaja el servicio y el
+        servicio de auditoría donde se registran las operaciones."""
         self._repositorio = repositorio
+        self._auditoria = auditoria
 
+    @auditar("Crear")
     def crear(self, entidad: T) -> T:
         """Valida y guarda una entidad nueva.
 
@@ -40,6 +45,7 @@ class ServicioBase(Generic[T]):
         """Devuelve todas las entidades."""
         return self._repositorio.leer_todos()
 
+    @auditar("Actualizar")
     def actualizar(self, entidad: T) -> T:
         """Valida y actualiza una entidad existente.
 
@@ -51,6 +57,7 @@ class ServicioBase(Generic[T]):
             raise ValueError(f"No existe un registro con ID {entidad.id}.")
         return self._repositorio.actualizar(entidad)
 
+    @auditar("Eliminar")
     def eliminar(self, id: int) -> bool:
         """Si el registro está siendo usado por otro, el repositorio
         lanza ValueError y no se borra."""

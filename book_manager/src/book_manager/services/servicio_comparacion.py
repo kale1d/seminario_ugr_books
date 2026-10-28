@@ -16,6 +16,7 @@ from ..entities.precio import Precio
 from ..entities.precio_web import PrecioWeb
 from ..entities.tipo_cotizacion import TipoCotizacion
 from ..repositories.interfaces import IRepositorio, IRepositorioPrecioWeb
+from .servicio_auditoria import ServicioAuditoria, auditar
 from .servicio_precio import ServicioPrecio
 
 # Carpeta donde se guardan los CSV y reportes generados.
@@ -103,7 +104,8 @@ class ServicioComparacion:
                  precios_web: IRepositorioPrecioWeb,
                  tipos: IRepositorio[TipoCotizacion],
                  carpeta_reportes: Path = CARPETA_REPORTES,
-                 tipo_cotizacion: str = "Oficial") -> None:
+                 tipo_cotizacion: str = "Oficial",
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
         """Guarda los repositorios y servicios que usa la comparación.
 
         Args:
@@ -115,6 +117,8 @@ class ServicioComparacion:
             carpeta_reportes (Path): Carpeta donde se guardan los CSV.
             tipo_cotizacion (str): Tipo de dólar con el que se convierten
                 los precios propios que están en USD.
+            auditoria (Optional[ServicioAuditoria]): Servicio donde se
+                registran las operaciones.
         """
         self._libros = libros
         self._precios = precios
@@ -122,6 +126,7 @@ class ServicioComparacion:
         self._tipos = tipos
         self._carpeta = Path(carpeta_reportes)
         self._tipo_cotizacion = tipo_cotizacion
+        self._auditoria = auditoria
 
     def comparar(self) -> List[Comparacion]:
         """Compara cada libro del catálogo con la web.
@@ -148,6 +153,7 @@ class ServicioComparacion:
             comparaciones.append(self._armar(libro, interno, web))
         return comparaciones
 
+    @auditar("Generar alertas de precio")
     def generar_alertas(self, umbral: Decimal) -> ResultadoAlertas:
         """Genera un CSV con los libros cuya diferencia de precio, en
         porcentaje y en cualquier sentido, es igual o mayor al umbral.

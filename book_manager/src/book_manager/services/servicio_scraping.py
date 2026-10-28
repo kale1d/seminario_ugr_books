@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Optional
 
+from .servicio_auditoria import ServicioAuditoria, auditar
 from .servicio_comparacion import ResultadoAlertas, ServicioComparacion
 
 # Carpeta "src", necesaria para que el subproceso encuentre el paquete.
@@ -16,15 +17,20 @@ CARPETA_SRC = Path(__file__).resolve().parents[2]
 class ServicioScraping:
     """Lanza el scraper y, al terminar, genera el CSV de alertas."""
 
-    def __init__(self, comparacion: ServicioComparacion) -> None:
+    def __init__(self, comparacion: ServicioComparacion,
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
         """Guarda el servicio de comparación.
 
         Args:
             comparacion (ServicioComparacion): Servicio que compara los
                 precios y genera las alertas.
+            auditoria (Optional[ServicioAuditoria]): Servicio donde se
+                registran las operaciones.
         """
         self._comparacion = comparacion
+        self._auditoria = auditoria
 
+    @auditar("Ejecutar scraping")
     def ejecutar(self, umbral: Decimal,
                  libro_id: Optional[int] = None) -> ResultadoAlertas:
         """Ejecuta el scraper y genera las alertas de precio.

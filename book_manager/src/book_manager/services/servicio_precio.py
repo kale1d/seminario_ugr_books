@@ -8,6 +8,7 @@ from ..entities.libro import Libro
 from ..entities.moneda import Moneda
 from ..entities.precio import Precio
 from ..repositories.interfaces import IRepositorio
+from .servicio_auditoria import ServicioAuditoria
 from .servicio_base import ServicioBase
 from .servicio_cotizacion_dolar import ServicioCotizacionDolar
 from .validaciones import exigir_existente
@@ -22,9 +23,10 @@ class ServicioPrecio(ServicioBase[Precio]):
     def __init__(self, repositorio: IRepositorio[Precio],
                  libros: IRepositorio[Libro],
                  monedas: IRepositorio[Moneda],
-                 cotizaciones: ServicioCotizacionDolar) -> None:
+                 cotizaciones: ServicioCotizacionDolar,
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
         """Guarda los repositorios y el servicio de cotizaciones que usa."""
-        super().__init__(repositorio)
+        super().__init__(repositorio, auditoria)
         self._libros = libros
         self._monedas = monedas
         self._cotizaciones = cotizaciones

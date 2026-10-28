@@ -14,3 +14,4 @@ from .precio import Precio
 from .stock import Stock
 from .cotizacion_dolar import CotizacionDolar
 from .precio_web import PrecioWeb
+from .auditoria import Auditoria

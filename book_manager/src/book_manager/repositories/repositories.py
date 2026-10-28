@@ -10,6 +10,7 @@ from typing import Generic, List, Optional, TypeVar
 from sqlalchemy import and_, func, inspect
 
 from ..database.connection import ConexionDB
+from ..entities.auditoria import Auditoria
 from ..entities.cotizacion_dolar import CotizacionDolar
 from ..entities.editorial import Editorial
 from ..entities.genero import Genero
@@ -22,11 +23,11 @@ from ..entities.tipo_cotizacion import TipoCotizacion
 from ..models.models import (
     CotizacionDolarModel, EditorialModel, GeneroModel, LibroModel,
     MonedaModel, PrecioModel, StockModel, TipoCotizacionModel,
-    PrecioWebModel
+    PrecioWebModel, AuditoriaModel
 )
 from .interfaces import (
     IRepositorio, IRepositorioCotizacionDolar, IRepositorioStock,
-    IRepositorioPrecioWeb
+    IRepositorioPrecioWeb, IRepositorioAuditoria
 )
 
 T = TypeVar("T")
@@ -366,6 +367,8 @@ class RepositorioCotizacionDolar(RepositorioBase[CotizacionDolar],
                 sesion.delete(m)
                 return True
             return False
+
+
 class RepositorioPrecioWeb(IRepositorioPrecioWeb):
     """Repositorio de los precios extraídos de la web."""
 
@@ -408,3 +411,46 @@ class RepositorioPrecioWeb(IRepositorioPrecioWeb):
             isbn=m.isbn, precio_usd=m.precio_usd, url_imagen=m.url_imagen,
             formas_pago=m.formas_pago, descripcion=m.descripcion,
         )
+
+
+class RepositorioAuditoria(IRepositorioAuditoria):
+    """Repositorio del historial de auditoría."""
+
+    def __init__(self, db: ConexionDB) -> None:
+        """Guarda la conexión a la base de datos."""
+        self.db = db
+
+    def crear(self, auditoria: Auditoria) -> Auditoria:
+        """Guarda un registro de auditoría.
+
+        Args:
+            auditoria (Auditoria): El registro a guardar.
+
+        Returns:
+            Auditoria: El registro guardado, con su ID asignado.
+        """
+        with self.db.obtener_sesion() as sesion:
+            modelo = AuditoriaModel(
+                accion=auditoria.accion, fecha=auditoria.fecha,
+                detalles=auditoria.detalles,
+            )
+            sesion.add(modelo)
+            sesion.flush()  # la base le asigna el ID
+            return self._a_entidad(modelo)
+
+    def leer_todos(self) -> List[Auditoria]:
+        """Devuelve el historial, del registro más nuevo al más viejo."""
+        with self.db.obtener_sesion() as sesion:
+            modelos = (
+                sesion.query(AuditoriaModel)
+                .order_by(AuditoriaModel.fecha.desc(),
+                          AuditoriaModel.id.desc())
+                .all()
+            )
+            return [self._a_entidad(m) for m in modelos]
+
+    @staticmethod
+    def _a_entidad(m: AuditoriaModel) -> Auditoria:
+        """Convierte el modelo SQL en su entidad."""
+        return Auditoria(accion=m.accion, detalles=m.detalles or "",
+                         fecha=m.fecha, id=m.id)

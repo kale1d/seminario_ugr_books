@@ -5,6 +5,7 @@ from typing import List, Optional
 from ..entities.libro import Libro
 from ..entities.stock import Stock
 from ..repositories.interfaces import IRepositorio, IRepositorioStock
+from .servicio_auditoria import ServicioAuditoria, auditar
 from .validaciones import exigir_existente
 
 
@@ -13,11 +14,15 @@ class ServicioStock:
     unidades."""
 
     def __init__(self, repositorio: IRepositorioStock,
-                 libros: IRepositorio[Libro]) -> None:
-        """Guarda el repositorio de stock y el de libros."""
+                 libros: IRepositorio[Libro],
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
+        """Guarda el repositorio de stock, el de libros y el servicio de
+        auditoría."""
         self._repositorio = repositorio
         self._libros = libros
+        self._auditoria = auditoria
 
+    @auditar("Crear")
     def crear(self, stock: Stock) -> Stock:
         """Valida y guarda el stock de un libro.
 
@@ -37,16 +42,19 @@ class ServicioStock:
         """Devuelve el stock de todos los libros."""
         return self._repositorio.leer_todos()
 
+    @auditar("Actualizar")
     def actualizar(self, stock: Stock) -> Stock:
         """Valida y actualiza el stock de un libro."""
         self._validar(stock)
         self._buscar(stock.libro_id)
         return self._repositorio.actualizar(stock)
 
+    @auditar("Eliminar")
     def eliminar(self, libro_id: int) -> bool:
         """Elimina el stock de un libro."""
         return self._repositorio.eliminar(libro_id)
 
+    @auditar("Ingresar stock")
     def ingresar(self, libro_id: int, cantidad: int) -> Stock:
         """Suma unidades al stock de un libro (por ejemplo, al recibir un
         pedido de la editorial)."""
@@ -56,6 +64,7 @@ class ServicioStock:
         stock.cantidad += cantidad
         return self._repositorio.actualizar(stock)
 
+    @auditar("Retirar stock")
     def retirar(self, libro_id: int, cantidad: int) -> Stock:
         """Resta unidades del stock (por ejemplo, al vender). No deja
         sacar más de lo que hay."""

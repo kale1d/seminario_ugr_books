@@ -1,9 +1,12 @@
 """Servicio de libros."""
 
+from typing import Optional
+
 from ..entities.editorial import Editorial
 from ..entities.genero import Genero
 from ..entities.libro import Libro
 from ..repositories.interfaces import IRepositorio
+from .servicio_auditoria import ServicioAuditoria
 from .servicio_base import ServicioBase
 from .validaciones import exigir_existente
 
@@ -16,9 +19,10 @@ class ServicioLibro(ServicioBase[Libro]):
 
     def __init__(self, repositorio: IRepositorio[Libro],
                  editoriales: IRepositorio[Editorial],
-                 generos: IRepositorio[Genero]) -> None:
+                 generos: IRepositorio[Genero],
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
         """Guarda los repositorios de libros, editoriales y géneros."""
-        super().__init__(repositorio)
+        super().__init__(repositorio, auditoria)
         self._editoriales = editoriales
         self._generos = generos
 

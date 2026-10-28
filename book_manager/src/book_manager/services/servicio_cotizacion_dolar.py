@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 from ..entities.cotizacion_dolar import CotizacionDolar
 from ..entities.tipo_cotizacion import TipoCotizacion
 from ..repositories.interfaces import IRepositorio, IRepositorioCotizacionDolar
+from .servicio_auditoria import ServicioAuditoria, auditar
 from .validaciones import exigir_existente
 
 # Segundos máximos de espera de la API antes de abandonar la consulta.
@@ -29,7 +30,8 @@ class ServicioCotizacionDolar:
     cotización vigente y descarga de cotizaciones desde la API."""
 
     def __init__(self, repositorio: IRepositorioCotizacionDolar,
-                 tipos: IRepositorio[TipoCotizacion]) -> None:
+                 tipos: IRepositorio[TipoCotizacion],
+                 auditoria: Optional[ServicioAuditoria] = None) -> None:
         """Guarda los repositorios que usa el servicio.
 
         Args:
@@ -37,10 +39,14 @@ class ServicioCotizacionDolar:
                 cotizaciones.
             tipos (IRepositorio[TipoCotizacion]): Repositorio de tipos de
                 cotización.
+            auditoria (Optional[ServicioAuditoria]): Servicio donde se
+                registran las operaciones.
         """
         self._repositorio = repositorio
         self._tipos = tipos
+        self._auditoria = auditoria
 
+    @auditar("Crear")
     def crear(self, cotizacion: CotizacionDolar) -> CotizacionDolar:
         """Guarda una cotización nueva.
 
@@ -83,6 +89,7 @@ class ServicioCotizacionDolar:
             ultima = cotizacion
         return ultima
 
+    @auditar("Actualizar")
     def actualizar(self, cotizacion: CotizacionDolar) -> CotizacionDolar:
         """Actualiza una cotización existente.
 
@@ -97,10 +104,12 @@ class ServicioCotizacionDolar:
             raise ValueError("No hay cotización para ese tipo y fecha.")
         return self._repositorio.actualizar(cotizacion)
 
+    @auditar("Eliminar")
     def eliminar(self, tipo_id: int, fecha: date) -> bool:
         """Elimina la cotización de un tipo en una fecha."""
         return self._repositorio.eliminar(tipo_id, fecha)
 
+    @auditar("Obtener cotizaciones de la API")
     def obtener_cotizaciones(self) -> List[CotizacionDolar]:
         """Descarga las cotizaciones de la API y las registra en la base.
 
