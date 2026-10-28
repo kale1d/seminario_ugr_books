@@ -35,6 +35,12 @@ def normalizar_titulo(titulo: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", sin_tildes.lower()).strip()
 
 
+def sin_parentesis(texto: str) -> str:
+    """Quita lo que va entre paréntesis ("El principito ( tapa dura )"
+    queda como "El principito")."""
+    return re.sub(r"\([^)]*\)", " ", texto)
+
+
 @dataclass(frozen=True)
 class Comparacion:
     """Resultado de comparar un libro del catálogo con la web.
@@ -226,7 +232,8 @@ class ServicioComparacion:
         parecidos = [
             c for c in candidatos
             if SequenceMatcher(
-                None, titulo, normalizar_titulo(c.titulo_web)
+                None, titulo,
+                normalizar_titulo(sin_parentesis(c.titulo_web))
             ).ratio() >= SIMILITUD_MINIMA
         ]
         return min(parecidos, key=lambda c: c.precio) if parecidos else None

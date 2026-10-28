@@ -10,12 +10,18 @@ from scrapy.http import Response
 from ...database.connection import ConexionDB
 from ...entities.libro import Libro
 from ...repositories.repositories import RepositorioLibro
+from ...services.servicio_comparacion import (
+    normalizar_titulo, sin_parentesis,
+)
 from ..loader import LibroWebLoader
 
 
 class CuspideSpider(scrapy.Spider):
     """Busca cada título del catálogo en Cúspide y extrae las fichas de
     los 10 primeros resultados.
+
+    Primero busca solo por título. Si entre los resultados no aparece
+    ese título, repite la búsqueda agregando el autor.
 
     Solo se buscan libros del catálogo propio, que se leen de la base de
     datos.
@@ -50,8 +56,29 @@ class CuspideSpider(scrapy.Spider):
             yield scrapy.Request(url, callback=self.parse_busqueda,
                                  cb_kwargs={"libro": libro})
 
-    def parse_busqueda(self, response: Response, libro: Libro):
-        """Toma las fichas de los primeros resultados de la búsqueda."""
+    def parse_busqueda(self, response: Response, libro: Libro,
+                       con_autor: bool = False):
+        """Toma las fichas de los primeros resultados de la búsqueda.
+
+        Si la búsqueda solo por título no trae el libro, la repite
+        agregando el autor.
+        """
+        titulos = response.css(
+            "div.product p.woocommerce-loop-product__title a::text"
+        ).getall()
+        buscado = normalizar_titulo(libro.titulo)
+        aparece = any(
+            normalizar_titulo(sin_parentesis(titulo)) == buscado
+            for titulo in titulos
+        )
+        if not aparece and not con_autor:
+            consulta = quote_plus(f"{libro.titulo} {libro.autor}")
+            yield scrapy.Request(
+                self.url_busqueda.format(consulta=consulta),
+                callback=self.parse_busqueda, dont_filter=True,
+                cb_kwargs={"libro": libro, "con_autor": True},
+            )
+            return
         enlaces = response.css(
             "div.product p.woocommerce-loop-product__title a::attr(href)"
         ).getall()

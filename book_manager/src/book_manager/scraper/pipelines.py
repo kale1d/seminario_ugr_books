@@ -50,3 +50,26 @@ class DuplicadosPipeline:
 
 class PersistenciaPipeline:
     """Guarda cada item en la tabla precios_web de la base de datos."""
+
+    def open_spider(self) -> None:
+        """Abre la conexión y se asegura de que existan las tablas."""
+        self.db = ConexionDB()
+        self.db.crear_tablas()
+
+    def process_item(self, item: Any) -> Any:
+        """Inserta una fila en precios_web con los datos del item."""
+        datos = ItemAdapter(item)
+        with self.db.obtener_sesion() as sesion:
+            sesion.add(PrecioWebModel(
+                libro_id=datos.get("libro_id"),
+                titulo_web=datos.get("titulo_web"),
+                isbn=datos.get("isbn"),
+                precio=datos.get("precio"),
+                precio_usd=datos.get("precio_usd"),
+                url_imagen=datos.get("url_imagen"),
+                formas_pago=datos.get("formas_pago"),
+                descripcion=datos.get("descripcion"),
+                url_detalle=datos.get("url_detalle"),
+                fecha_extraccion=datos.get("fecha_extraccion"),
+            ))
+        return item

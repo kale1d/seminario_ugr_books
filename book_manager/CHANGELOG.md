@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## [Ejercicio 04]
+- Entidad `PrecioWeb` y repositorio `RepositorioPrecioWeb` (`leer_ultimas`).
+- `ServicioComparacion`: coincidencia por título normalizado, elección del precio web más barato y diferencia en pesos y porcentaje.
+- Alertas en CSV con el estado “Web más barata/más cara”.
+- `ServicioScraping`: ejecución del scraper en subproceso y generación de alertas con el umbral porcentual ingresado.
+- El spider usa una única `fecha_extraccion` por ejecución.
+- El spider busca primero por título y, si el título no aparece entre los resultados, repite la búsqueda agregando el autor.
+- La comparación ignora el texto entre paréntesis del título web (por ejemplo, “( tapa dura )”).
+- Corrección de `PersistenciaPipeline`: había quedado sin los métodos que guardan los items en la base.
+
 ## [Ejercicio 03]
 - Nuevo scraper `CuspideSpider` (Scrapy): busca en Cúspide cada título del catálogo y extrae las fichas de los 10 primeros resultados (precio en pesos y en dólares, ISBN, URL de la imagen, formas de pago y descripción detallada).
 - `LibroWebItem`: estructura de los datos extraídos.
