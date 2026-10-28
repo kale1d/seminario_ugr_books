@@ -15,3 +15,4 @@ from .servicio_stock import ServicioStock
 from .servicio_cotizacion_dolar import ServicioCotizacionDolar
 from .servicio_comparacion import ServicioComparacion
 from .servicio_scraping import ServicioScraping
+from .servicio_reporte import ServicioReporte

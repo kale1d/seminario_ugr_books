@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## [Ejercicio 05]
+- Nuevo `ServicioReporte`: genera un Excel con pandas (`openpyxl`) con las columnas Libro, Precio interno, Precio web, Diferencia y Fecha de extracción.
+- El reporte reutiliza `ServicioComparacion.comparar()`, por lo que usa el mismo criterio que las alertas: precio web más barato entre las ediciones coincidentes.
+- Los libros sin coincidencia en la web figuran en el reporte con el precio web, la diferencia y la fecha vacíos.
+- El archivo se guarda en `reportes/` con la fecha y hora en el nombre.
+
 ## [Ejercicio 04]
 - Entidad `PrecioWeb` y repositorio `RepositorioPrecioWeb` (`leer_ultimas`).
 - `ServicioComparacion`: coincidencia por título normalizado, elección del precio web más barato y diferencia en pesos y porcentaje.
