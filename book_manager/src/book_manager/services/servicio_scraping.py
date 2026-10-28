@@ -55,12 +55,17 @@ class ServicioScraping:
             comando.append(str(libro_id))
         entorno = {**os.environ, "PYTHONPATH": str(CARPETA_SRC)}
 
+        # Se captura la salida: el log de Scrapy es muy largo y en un
+        # notebook no se mostraría de todos modos.
         resultado = subprocess.run(
-            comando, env=entorno, cwd=CARPETA_SRC.parent
+            comando, env=entorno, cwd=CARPETA_SRC.parent,
+            capture_output=True, text=True, encoding="utf-8",
+            errors="replace",
         )
         if resultado.returncode != 0:
+            detalle = "\n".join(resultado.stderr.strip().splitlines()[-10:])
             raise RuntimeError(
                 "El scraper terminó con error "
-                f"(código {resultado.returncode})."
+                f"(código {resultado.returncode}).\n{detalle}"
             )
         return self._comparacion.generar_alertas(umbral)

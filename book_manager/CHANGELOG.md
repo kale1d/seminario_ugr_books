@@ -6,6 +6,7 @@
 - Generar reporte crea el Excel de precios y muestra su ruta.
 - Ver historial de auditoría lista los últimos 50 registros, del más nuevo al más viejo.
 - `Consola` recibe `ServicioScraping`, `ServicioReporte` y `ServicioAuditoria`; `main` arma el `ServicioComparacion` que usan el scraping y el reporte.
+- `ServicioScraping` captura la salida del proceso del scraper y, si falla, informa las últimas líneas del error.
 
 ## [Ejercicio 06]
 - Nueva entidad `Auditoria`, modelo `AuditoriaModel` (tabla `auditoria` con acción, fecha y detalles), interfaz `IRepositorioAuditoria` y repositorio `RepositorioAuditoria`.
