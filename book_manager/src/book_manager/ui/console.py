@@ -2,6 +2,7 @@
 
 import csv
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import Callable, Dict, Optional, Tuple, Type, TypeVar
 
 from ..entities.cotizacion_dolar import CotizacionDolar
@@ -13,6 +14,7 @@ from ..entities.moneda import Moneda
 from ..entities.precio import Precio
 from ..entities.stock import Stock
 from ..entities.tipo_cotizacion import TipoCotizacion
+from ..services.servicio_auditoria import ServicioAuditoria
 from ..services.servicio_base import ServicioBase
 from ..services.servicio_cotizacion_dolar import ServicioCotizacionDolar
 from ..services.servicio_editorial import ServicioEditorial
@@ -20,6 +22,8 @@ from ..services.servicio_genero import ServicioGenero
 from ..services.servicio_libro import ServicioLibro
 from ..services.servicio_moneda import ServicioMoneda
 from ..services.servicio_precio import ServicioPrecio
+from ..services.servicio_reporte import ServicioReporte
+from ..services.servicio_scraping import ServicioScraping
 from ..services.servicio_stock import ServicioStock
 from ..services.servicio_tipo_cotizacion import ServicioTipoCotizacion
 
@@ -44,7 +48,9 @@ class Consola:
                  tipos_cotizacion: ServicioTipoCotizacion,
                  libros: ServicioLibro, precios: ServicioPrecio,
                  stock: ServicioStock,
-                 cotizaciones: ServicioCotizacionDolar) -> None:
+                 cotizaciones: ServicioCotizacionDolar,
+                 scraping: ServicioScraping, reporte: ServicioReporte,
+                 auditoria: ServicioAuditoria) -> None:
         """Guarda los servicios que usan los menús."""
         self._generos = generos
         self._editoriales = editoriales
@@ -54,6 +60,9 @@ class Consola:
         self._precios = precios
         self._stock = stock
         self._cotizaciones = cotizaciones
+        self._scraping = scraping
+        self._reporte = reporte
+        self._auditoria = auditoria
 
     def ejecutar(self) -> None:
         """Muestra el menú principal hasta que el usuario elige salir."""
@@ -68,6 +77,9 @@ class Consola:
             "6": ("Precios", self._menu_precios),
             "7": ("Stock", self._menu_stock),
             "8": ("Cotizaciones del dólar", self._menu_cotizaciones),
+            "9": ("Ejecutar scraping", self._ejecutar_scraping),
+            "10": ("Generar reporte", self._generar_reporte),
+            "11": ("Ver historial de auditoría", self._ver_auditoria),
         }
         try:
             self._menu("GESTOR DE LIBROS", opciones, "Salir")
@@ -538,3 +550,58 @@ class Consola:
         print("Conectando con la API web para descargar cotizaciones...")
         guardadas = self._cotizaciones.obtener_cotizaciones()
         print(f"Se guardaron {len(guardadas)} cotizaciones.")
+
+    # ---------- Scraping, reporte y auditoría ----------
+
+    def _pedir_umbral(self, mensaje: str) -> Decimal:
+        """Pide la diferencia porcentual mínima (0 o más) hasta que se
+        escriba una válida. Acepta coma o punto para los decimales."""
+        while True:
+            valor = self._pedir(mensaje).replace(",", ".")
+            try:
+                umbral = Decimal(valor)
+            except InvalidOperation:
+                print("Tiene que ser un número (por ejemplo, 10 o 7,5).")
+                continue
+            if umbral < 0 or not umbral.is_finite():
+                print("Tiene que ser un número igual o mayor a 0.")
+                continue
+            return umbral
+
+    def _ejecutar_scraping(self) -> None:
+        """Pide la diferencia mínima, ejecuta el scraper de Cúspide y
+        genera el CSV de alertas."""
+        umbral = self._pedir_umbral(
+            "Diferencia mínima de precio (%) para generar una alerta: "
+        )
+        print("Ejecutando el scraper (puede tardar varios minutos)...")
+        try:
+            resultado = self._scraping.ejecutar(umbral)
+        except RuntimeError as error:
+            print(f"Error: {error}")
+            return
+        print(f"Libros analizados: {resultado.total_libros}")
+        print(f"Libros comparados con la web: {resultado.total_comparados}")
+        print(f"Alertas generadas: {resultado.total_alertas}")
+        print(f"Archivo de alertas: {resultado.ruta}")
+
+    def _generar_reporte(self) -> None:
+        """Genera el reporte Excel con los precios internos y los de la
+        web."""
+        ruta = self._reporte.generar_excel()
+        print(f"Reporte generado: {ruta}")
+
+    def _ver_auditoria(self) -> None:
+        """Muestra el historial de auditoría, de lo más nuevo a lo más
+        viejo (los últimos 50 registros)."""
+        historial = self._auditoria.leer_historial()
+        if not historial:
+            print("Todavía no hay operaciones registradas.")
+            return
+        mostrados = historial[:50]
+        print(f"Historial de auditoría ({len(mostrados)} de "
+              f"{len(historial)} registros):")
+        for registro in mostrados:
+            print(f"{registro.fecha:%Y-%m-%d %H:%M:%S} | "
+                  f"{registro.accion} | {registro.detalles}")
+
